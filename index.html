@@ -400,6 +400,16 @@
     .sg-foot{font-size:12.5px;color:var(--muted);line-height:1.55;background:#fafcff;border:1px dashed var(--line);border-radius:9px;padding:11px 14px;margin-top:4px}
     @media(max-width:900px){.sg-grid{grid-template-columns:1fr 1fr}.sg-faq{grid-template-columns:1fr 1fr}}
     @media(max-width:560px){.sg-grid,.sg-faq{grid-template-columns:1fr}.sg-hero{padding:16px}}
+    /* one-time first-visit nudge (bottom-right card) */
+    .sg-nudge{position:fixed;right:18px;bottom:18px;z-index:60;max-width:300px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy2);border-radius:11px;box-shadow:0 8px 26px rgba(15,23,42,.22);padding:13px 30px 14px 15px;display:flex;flex-direction:column;gap:6px;animation:sgpop .25s ease}
+    .sg-nudge b{font-size:13.5px;color:var(--navy)}
+    .sg-nudge>span{font-size:12.5px;color:#3a4658;line-height:1.4}
+    .sg-nudge button{align-self:flex-start;margin-top:3px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer}
+    .sg-nudge button:hover{background:var(--navy2)}
+    .sg-nudge-x{position:absolute;top:6px;right:11px;font-size:17px;color:var(--muted);cursor:pointer;line-height:1}
+    .sg-nudge-x:hover{color:var(--ink)}
+    @keyframes sgpop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    @media(max-width:560px){.sg-nudge{right:12px;left:12px;bottom:12px;max-width:none}}
   </style>
   <div id="view-start" style="display:none">
     <div class="pagehead"><span class="ph-ico">✨</span><div class="ph-t"><h2>Start here</h2><p>A one-minute tour of how to find a job that genuinely fits you. Press play and follow along, or read the six steps.</p></div></div>
@@ -476,12 +486,18 @@
     </div>
   </div>
   <script>
-  /* ---- Start-here guided tour: self-contained, on-device voice (no AI, no network) ---------------------
-     Narration uses the browser's own speechSynthesis with an American-female voice. Captions always show,
-     so it works fully with sound off too. Stays on this page and highlights each step (the user taps
-     "Show me" to visit a screen). voice.js/the counsel is independent and currently off; this never needs it. */
+  /* ---- Start-here guided tour: on-device voice, captions always on -------------------------------------
+     Narration plays INSTANTLY with the browser's own speechSynthesis (an American-female voice), and when
+     the page is served over http it warms a high-quality on-device neural voice (Kokoro af_bella, American
+     female) in the BACKGROUND so later steps/replays upgrade automatically. Kokoro synthesizes in WASM on
+     this machine: the library + model download once from a CDN then the browser caches them, and the text
+     and audio NEVER leave the device. Captions always show, so it works fully muted too. No cloud AI: this
+     never calls a model API (local-checks no_ai_on_render stays green). voice.js/the counsel is independent. */
   (function(){
     var synth = window.speechSynthesis || null, fvoice = null;
+    var httpOrigin = /^https?:$/.test(location.protocol);
+    var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "");
+    var GUIDE_VOICE = "af_bella"; // Kokoro American-female voice: clear and bright
     function pickF(){
       if(!synth) return;
       var all = synth.getVoices() || [];
@@ -494,6 +510,48 @@
       if(!fvoice) fvoice = pool[0] || (all.filter(function(v){ return /en/i.test(v.lang); })[0]) || null;
     }
     if(synth){ pickF(); if(typeof synth.onvoiceschanged!=="undefined") synth.onvoiceschanged = pickF; }
+
+    /* ---- premium on-device neural voice (Kokoro), loaded lazily on the first Play gesture ---- */
+    var kokoro=null, kokoroLoading=null, kokoroBroken=false, ac=null, curSrc=null, premiumOn=false;
+    function stopSource(){ try{ if(curSrc){ curSrc.onended=null; curSrc.stop(); } }catch(e){} curSrc=null; }
+    function playPCM(pcm, rate, onend){
+      try{
+        if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)();
+        if(ac.state==="suspended"){ try{ ac.resume(); }catch(e){} }
+        var buf = ac.createBuffer(1, pcm.length, rate||24000);
+        buf.getChannelData(0).set(pcm);
+        stopSource();
+        curSrc = ac.createBufferSource(); curSrc.buffer=buf; curSrc.connect(ac.destination);
+        curSrc.onended = function(){ if(onend) onend(); };
+        curSrc.start();
+      }catch(e){ if(onend) onend(); }
+    }
+    function ensureKokoro(){
+      if(kokoro) return Promise.resolve(kokoro);
+      if(kokoroLoading) return kokoroLoading;
+      if(!httpOrigin) return Promise.reject(new Error("not http"));
+      kokoroLoading = import("https://esm.sh/kokoro-js@1.2.1")
+        .then(function(mod){ return mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: isMobile?"q4":"q8", device:"wasm" }); })
+        .then(function(k){ kokoro=k; premiumOn=true; setMuteUi(); return k; })
+        .catch(function(e){ kokoroBroken=true; throw e; });
+      return kokoroLoading;
+    }
+    function warmPremium(){ if(httpOrigin && !kokoro && !kokoroBroken && !muted()) ensureKokoro().catch(function(){}); }
+    function genKokoro(text, onend){
+      kokoro.generate(text, { voice: GUIDE_VOICE })
+        .then(function(a){ playPCM(a.audio||a.data, a.sampling_rate||a.sampleRate||24000, onend); })
+        .catch(function(){ kokoroBroken=true; premiumOn=false; setMuteUi(); speakBrowser(text, onend); });
+    }
+    function speakBrowser(text, onend){
+      if(!synth){ if(onend) setTimeout(onend, readTime(text)); return; }
+      try{
+        var u = new SpeechSynthesisUtterance(text);
+        if(fvoice) u.voice = fvoice;
+        u.rate = 1.04; u.pitch = 1.06; u.volume = 1;   // a touch quick and bright = clear, chippy
+        u.onend = onend; u.onerror = onend;
+        synth.speak(u);
+      }catch(e){ if(onend) onend(); }
+    }
 
     var LINES = [
       { el:null,  cap:"Welcome. Job hunting is tiring. Let me walk you through it in about a minute.", say:"Hi, and welcome. Looking for a job can feel lonely and exhausting. This app is here to carry the heavy lifting, so you can show up as your best, real self. Let me walk you through it. Six simple steps." },
@@ -508,11 +566,11 @@
 
     var idx = -1, playing = false, timer = null;
     function muted(){ try{ return localStorage.getItem("jsos_guide_mute")==="1"; }catch(e){ return false; } }
-    function setMuteUi(){ var b=document.getElementById("sg-voice"); if(b) b.textContent = muted() ? "🔇 Voice off" : "🔊 Voice"; }
+    function setMuteUi(){ var b=document.getElementById("sg-voice"); if(!b) return; if(muted()){ b.textContent="🔇 Voice off"; b.title="Turn the voice on"; } else { b.textContent = premiumOn ? "🔊 Voice ✨" : "🔊 Voice"; b.title = premiumOn ? "Natural voice on" : "Turn the voice on or off"; } }
     function clearHi(){ for(var i=0;i<LINES.length;i++){ var e=LINES[i].el && document.getElementById(LINES[i].el); if(e) e.classList.remove("active"); } }
     function caption(eq,t){ var a=document.getElementById("sg-cap-t"), q=document.querySelector("#sg-cap .sg-eq"); if(q)q.textContent=eq; if(a)a.textContent=t; }
     function playLbl(p){ var b=document.getElementById("sg-play"); if(b) b.textContent = p ? "⏸ Pause tour" : "▶ Play the guided tour"; }
-    function stopSpeak(){ try{ if(synth) synth.cancel(); }catch(e){} }
+    function stopSpeak(){ try{ if(synth) synth.cancel(); }catch(e){} stopSource(); }
 
     function show_(i){
       clearHi();
@@ -525,26 +583,39 @@
     function step(i){
       idx = i; if(i>=LINES.length){ finish(); return; }
       show_(i);
-      var L = LINES[i], next = function(){ if(!playing) return; timer = setTimeout(function(){ step(i+1); }, 220); };
-      if(synth && !muted()){
-        var u = new SpeechSynthesisUtterance(L.say);
-        if(fvoice) u.voice = fvoice;
-        u.rate = 1.04; u.pitch = 1.06; u.volume = 1;   // a touch quick and bright = clear, chippy
-        u.onend = next; u.onerror = next;
-        stopSpeak(); synth.speak(u);
-      } else {
-        timer = setTimeout(next, readTime(L.say));
-      }
+      var L = LINES[i], spoke=false;
+      var next = function(){ if(!playing) return; if(spoke) return; spoke=true; timer = setTimeout(function(){ step(i+1); }, 220); };
+      if(muted()){ timer = setTimeout(next, readTime(L.say)); return; }
+      stopSpeak();
+      if(kokoro && !kokoroBroken){ genKokoro(L.say, next); }   // premium natural voice once it is ready
+      else { speakBrowser(L.say, next); warmPremium(); }        // instant browser voice now, upgrade later
     }
     function finish(){ playing=false; playLbl(false); clearTimeout(timer); }
     window.sgToggle = function(){
       if(playing){ playing=false; playLbl(false); clearTimeout(timer); stopSpeak(); caption("⏸ Paused","Paused. Press play to keep going, or tap any step to jump in."); return; }
-      playing=true; playLbl(true); var start = (idx<0||idx>=LINES.length)?0:idx; step(start);
+      warmPremium(); playing=true; playLbl(true); var start = (idx<0||idx>=LINES.length)?0:idx; step(start);
     };
-    window.sgReplay = function(){ clearTimeout(timer); stopSpeak(); playing=true; playLbl(true); step(0); };
-    window.sgMute = function(){ try{ localStorage.setItem("jsos_guide_mute", muted()?"0":"1"); }catch(e){} setMuteUi(); if(muted()) stopSpeak(); };
-    window.sgStepClick = function(i){ clearTimeout(timer); playing=true; playLbl(true); step(i+1); }; // cards are steps 1..6 -> LINES 1..6
+    window.sgReplay = function(){ clearTimeout(timer); stopSpeak(); warmPremium(); playing=true; playLbl(true); step(0); };
+    window.sgMute = function(){ try{ localStorage.setItem("jsos_guide_mute", muted()?"0":"1"); }catch(e){} setMuteUi(); if(muted()) stopSpeak(); else warmPremium(); };
+    window.sgStepClick = function(i){ clearTimeout(timer); warmPremium(); playing=true; playLbl(true); step(i+1); }; // cards are steps 1..6 -> LINES 1..6
     window.sgStop = function(){ playing=false; clearTimeout(timer); stopSpeak(); playLbl(false); clearHi(); };
+
+    /* one-time gentle nudge for first-time visitors, on whatever page they land on (default Outreach).
+       Shows once: dismissing it, or opening the Start-here tab by any route, sets jsos_guide_seen. */
+    function markSeen(){ try{ localStorage.setItem("jsos_guide_seen","1"); }catch(e){} }
+    window.sgMarkSeen = markSeen;
+    window.sgNudge = function(){
+      try{
+        if(navigator.webdriver) return;                                  // keep automated checks/screenshots clean
+        if(localStorage.getItem("jsos_guide_seen")==="1") return;
+        if(document.getElementById("sg-nudge")) return;
+        var n=document.createElement("div"); n.id="sg-nudge"; n.className="sg-nudge";
+        n.innerHTML='<span class="sg-nudge-x" title="Dismiss">×</span><b>👋 New here?</b><span>Take the 1-minute tour of how to use this to find a job that fits you.</span><button>Start the tour →</button>';
+        n.querySelector("button").onclick=function(){ markSeen(); n.remove(); if(window.show) show("start"); if(window.sgToggle) sgToggle(); };
+        n.querySelector(".sg-nudge-x").onclick=function(){ markSeen(); n.remove(); };
+        document.body.appendChild(n);
+      }catch(e){}
+    };
     if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", setMuteUi); else setMuteUi();
   })();
   </script>
@@ -3066,7 +3137,7 @@ function saveCall(){const id=_callId;if(!id)return;const outcome=$('call-outcome
   if(statusOf(id)!=='applied'&&statusOf(id)!=='met')setStatus(id,'applied');
   closeOv('ov-call');renderOutreach();toast('Call logged: '+outcome+'.');}
 
-function show(v){['start','roles','recs','cmp','track','edgefit','counsel','cockpit','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});if(v!=='start'&&window.sgStop)window.sgStop();document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='counsel'){const f=$('counsel-frame');if(f)f.src='board-review.html?t='+Date.now();}if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
+function show(v){['start','roles','recs','cmp','track','edgefit','counsel','cockpit','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});if(v!=='start'&&window.sgStop)window.sgStop();if(v==='start'){if(window.sgMarkSeen)window.sgMarkSeen();var _ng=document.getElementById('sg-nudge');if(_ng)_ng.remove();}document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='counsel'){const f=$('counsel-frame');if(f)f.src='board-review.html?t='+Date.now();}if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
 /* phone hamburger: open/close the collapsed nav + utilities dropdown (no-op visuals on desktop) */
 function toggleNav(){const open=document.body.classList.toggle('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded',open?'true':'false');}
 function closeNav(){document.body.classList.remove('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded','false');}
@@ -3223,7 +3294,7 @@ async function jsosPullState(rerender){
   }catch(e){/* no sync server: stay local-only, exactly as before */}
 }
 
-renderRoles();renderRecs();renderLearn();renderEdge();show('outreach');
+renderRoles();renderRecs();renderLearn();renderEdge();show('outreach');if(window.sgNudge)setTimeout(window.sgNudge,700);
 /* developer-only tabs: the QA Cockpit and Review counsel are operator tools. On an end-user profile page
    (not owner and no ?dev=1) they are hidden, so the end user sees only their product panels. The owner /
    default view keeps them, so there's dashboard is unchanged. */

@@ -114,15 +114,70 @@
     }
     var btn = "border:1px solid #e2e8f0;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;color:#1f3a5f";
     bar.innerHTML = '<span style="color:#5a6b80;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(USER.email || "Signed in") + "</span>" +
+      (window.IS_OWNER ? '<button id="jsos-users" style="' + btn + ';font-weight:700">Users</button>' : "") +
       '<button id="jsos-privacy" style="' + btn + '">Privacy</button>' +
       '<button id="jsos-export" style="' + btn + '">Export my data</button>' +
       '<button id="jsos-signout" style="' + btn + '">Sign out</button>' +
       '<button id="jsos-delete" style="border:1px solid #f0c4c4;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;color:#9b2c2c">Delete my data</button>';
+    if (window.IS_OWNER) { var ub = document.getElementById("jsos-users"); if (ub) ub.onclick = window.jsosUsers; }
     document.getElementById("jsos-privacy").onclick = window.jsosPrivacy;
     document.getElementById("jsos-export").onclick = window.jsosExport;
     document.getElementById("jsos-signout").onclick = window.jsosSignOut;
     document.getElementById("jsos-delete").onclick = window.jsosDeleteConfirm;
   }
+
+  /* OWNER Users page: a table of users (email + last active), invite by email, resend their sign-in link, or
+     remove them. Magic-link only — no passwords. All data comes from /api/admin (service-role, owner-gated). */
+  window.jsosUsers = function () {
+    gate(
+      '<div style="font-size:20px;font-weight:800;margin-bottom:10px">Users</div>' +
+      '<div style="display:flex;gap:6px;margin-bottom:10px">' +
+      '<input id="jsos-inv-email" type="email" placeholder="invite a user by email" autocomplete="off" style="flex:1;min-width:0;padding:9px 11px;border-radius:8px;border:1px solid #ffffff33;background:#ffffff14;color:#fff;font-size:14px"/>' +
+      '<button id="jsos-inv-go" style="border:0;background:#fff;color:#0f2742;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer">Invite</button></div>' +
+      '<div id="jsos-users-msg" style="min-height:16px;font-size:12px;opacity:.85;margin-bottom:8px"></div>' +
+      '<div id="jsos-users-tbl" style="max-height:48vh;overflow:auto;text-align:left;font-size:12.5px">Loading…</div>' +
+      '<button id="jsos-users-close" style="width:100%;padding:11px;margin-top:14px;border-radius:8px;border:0;background:#fff;color:#0f2742;font-weight:700;font-size:15px;cursor:pointer">Close</button>'
+    );
+    document.getElementById("jsos-users-close").onclick = function () { hideGate(); };
+    var msg = document.getElementById("jsos-users-msg");
+    async function token() { try { return ((await sb.auth.getSession()).data.session || {}).access_token || ""; } catch (e) { return ""; } }
+    async function post(body) { return fetch("/api/admin", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (await token()) }, body: JSON.stringify(body) }); }
+    async function act(action, email, id) {
+      if (action === "remove" && !confirm("Remove " + email + "? This deletes their account and all their data.")) return;
+      msg.textContent = action === "remove" ? "Removing…" : "Sending link…";
+      try { var r = await post({ action: action, email: email, id: id }); var d = await r.json().catch(function () { return {}; });
+        msg.textContent = r.ok ? (action === "remove" ? "Removed." : "Sign-in link sent.") : (d.error || "Failed."); if (r.ok) load();
+      } catch (e) { msg.textContent = "Could not reach the admin service (it runs on the deployed app)."; }
+    }
+    async function load() {
+      var tbl = document.getElementById("jsos-users-tbl");
+      try {
+        var r = await fetch("/api/admin", { headers: { Authorization: "Bearer " + (await token()) } });
+        var d = await r.json().catch(function () { return {}; });
+        if (!r.ok) { tbl.innerHTML = '<div style="opacity:.8">' + esc(d.error || "Could not load users.") + "</div>"; return; }
+        var rows = (d.users || []).map(function (u) {
+          var last = u.lastActive ? new Date(u.lastActive).toISOString().slice(0, 10) : "never";
+          return '<tr style="border-top:1px solid #ffffff22"><td style="padding:7px 8px">' + esc(u.email || "") + "</td>" +
+            '<td style="padding:7px 8px;opacity:.8;white-space:nowrap">' + esc(last) + "</td>" +
+            '<td style="padding:7px 8px;white-space:nowrap">' +
+            '<button data-act="resend" data-email="' + esc(u.email) + '" style="border:1px solid #ffffff44;background:transparent;color:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px">Resend link</button> ' +
+            '<button data-act="remove" data-id="' + esc(u.id) + '" data-email="' + esc(u.email) + '" style="border:1px solid #f0a0a0;background:transparent;color:#ffd2d2;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px">Remove</button></td></tr>';
+        }).join("");
+        tbl.innerHTML = '<table style="width:100%;border-collapse:collapse"><thead><tr style="opacity:.7;font-size:10px;text-transform:uppercase"><th style="text-align:left;padding:4px 8px">Email</th><th style="text-align:left;padding:4px 8px">Last active</th><th style="text-align:left;padding:4px 8px">Actions</th></tr></thead><tbody>' +
+          (rows || '<tr><td style="padding:8px;opacity:.8">No users yet. Invite one above.</td></tr>') + "</tbody></table>";
+        tbl.querySelectorAll("button[data-act]").forEach(function (b) { b.onclick = function () { act(b.getAttribute("data-act"), b.getAttribute("data-email"), b.getAttribute("data-id")); }; });
+      } catch (e) { tbl.innerHTML = '<div style="opacity:.8">Could not reach the admin service (it runs on the deployed app).</div>'; }
+    }
+    document.getElementById("jsos-inv-go").onclick = async function () {
+      var email = (document.getElementById("jsos-inv-email").value || "").trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = "Enter a valid email."; return; }
+      msg.textContent = "Inviting…";
+      try { var r = await post({ action: "invite", email: email }); var d = await r.json().catch(function () { return {}; });
+        msg.textContent = r.ok ? ("Invited " + email + ". They get a sign-in link by email.") : (d.error || "Invite failed."); if (r.ok) { document.getElementById("jsos-inv-email").value = ""; load(); }
+      } catch (e) { msg.textContent = "Could not reach the admin service (it runs on the deployed app)."; }
+    };
+    load();
+  };
 
   /* the privacy notice (PDPA/GDPR right to be informed): what, why, where, how long, your rights, contact. */
   window.jsosPrivacy = function () {
