@@ -9,6 +9,13 @@ window.CHANGELOG = [
   },
   {
     "id": "dedup-open-queue",
+    "date": "2026-06-16",
+    "title": "Collapse duplicate open backlog picks for the same target to the newest",
+    "detail": "Shipped and live for everyone.",
+    "scope": "all"
+  },
+  {
+    "id": "dedup-open-queue",
     "date": "2026-06-15",
     "title": "Collapse duplicate open backlog picks for the same target to the newest",
     "detail": "Shipped and live for everyone.",

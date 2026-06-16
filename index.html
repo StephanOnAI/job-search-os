@@ -341,6 +341,7 @@
     <button class="navtoggle" id="navtoggle" type="button" aria-label="Open menu" aria-expanded="false" onclick="toggleNav()"><span class="nt"><span></span><span></span><span></span></span></button>
     <div class="navmenu" id="navmenu">
       <div class="tabs">
+        <div class="tab" id="tab-start" onclick="show('start')">✨ Start here</div>
         <div class="tab" id="tab-outreach" onclick="show('outreach')">📨 Outreach</div>
         <div class="tab" id="tab-track" onclick="show('track')">📊 Tracker</div>
         <div class="tab" id="tab-roles" onclick="show('roles')">All Roles</div>
@@ -362,6 +363,191 @@
 </header>
 
 <div class="wrap">
+
+  <!-- ============ START HERE — the one-page, narrated walkthrough (shown to EVERY profile) ============ -->
+  <style>
+    /* Self-contained styles for the Start-here guide. Navy/white house look, kept compact to fit one screen. */
+    #view-start .pagehead p{max-width:none}
+    .sg-wrap{max-width:1100px;margin:0 auto}
+    .sg-hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:14px;padding:14px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+    .sg-hero-t{flex:1;min-width:240px}
+    .sg-hero-t h3{margin:0 0 5px;font-size:clamp(17px,2.1vw,22px);line-height:1.25}
+    .sg-hero-t p{margin:0;font-size:13.5px;line-height:1.5;opacity:.92}
+    .sg-ctrls{display:flex;flex-direction:column;gap:8px;min-width:190px}
+    .sg-play{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--navy);border:none;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    .sg-play:hover{background:#eef3fb}
+    .sg-mini{display:flex;gap:8px}
+    .sg-mini button{flex:1;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 8px;font-size:12.5px;font-weight:600;cursor:pointer}
+    .sg-mini button:hover{background:rgba(255,255,255,.26)}
+    .sg-cap{margin:10px 0 2px;min-height:34px;background:#fafcff;border:1px solid var(--line);border-left:3px solid var(--navy2);border-radius:8px;padding:8px 13px;font-size:13.5px;color:var(--ink);line-height:1.45;display:flex;align-items:center;gap:9px}
+    .sg-cap .sg-eq{color:var(--navy2);font-weight:700;white-space:nowrap}
+    .sg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:11px 0}
+    .sg-step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .15s}
+    .sg-step:hover{border-color:#c9d8ec;box-shadow:0 3px 12px rgba(31,58,95,.08)}
+    .sg-step.active{border-color:var(--navy2);box-shadow:0 0 0 2px rgba(44,82,130,.35),0 6px 18px rgba(31,58,95,.14);transform:translateY(-1px)}
+    .sg-num{position:absolute;top:-9px;left:-9px;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.18)}
+    .sg-step h4{margin:2px 0 5px;font-size:14.5px;color:var(--navy)}
+    .sg-step h4 .sg-ico{margin-right:5px}
+    .sg-what{margin:0 0 6px;font-size:13px;color:var(--ink);line-height:1.42}
+    .sg-why{margin:0 0 9px;font-size:12px;color:var(--muted);line-height:1.42}
+    .sg-why b{color:#1a5b40;font-weight:600}
+    .sg-show{background:#eef3fb;border:1px solid #d6e2f2;color:var(--navy2);border-radius:7px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer}
+    .sg-show:hover{background:#e0ebf8}
+    .sg-faq{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:11px 0 6px}
+    .sg-q{background:#f1f5f9;border-radius:9px;padding:10px 12px}
+    .sg-q b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--navy2);margin-bottom:3px}
+    .sg-q span{font-size:12px;color:#3a4658;line-height:1.42}
+    .sg-foot{font-size:12.5px;color:var(--muted);line-height:1.55;background:#fafcff;border:1px dashed var(--line);border-radius:9px;padding:11px 14px;margin-top:4px}
+    @media(max-width:900px){.sg-grid{grid-template-columns:1fr 1fr}.sg-faq{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.sg-grid,.sg-faq{grid-template-columns:1fr}.sg-hero{padding:16px}}
+  </style>
+  <div id="view-start" style="display:none">
+    <div class="pagehead"><span class="ph-ico">✨</span><div class="ph-t"><h2>Start here</h2><p>A one-minute tour of how to find a job that genuinely fits you. Press play and follow along, or read the six steps.</p></div></div>
+    <div class="sg-wrap">
+      <div class="sg-hero">
+        <div class="sg-hero-t">
+          <h3>Welcome. Let's get you in front of the right people.</h3>
+          <p>Job hunting is tiring and lonely. This app carries the heavy lifting, finding roles, checking the fit, and writing the emails, so you can show up as your best, real self. You stay in control. You always press send.</p>
+        </div>
+        <div class="sg-ctrls">
+          <button class="sg-play" id="sg-play" onclick="sgToggle()">▶ Play the guided tour</button>
+          <div class="sg-mini">
+            <button onclick="sgReplay()">↺ Replay</button>
+            <button id="sg-voice" onclick="sgMute()" title="Turn the voice on or off">🔊 Voice</button>
+          </div>
+        </div>
+      </div>
+      <div class="sg-cap" id="sg-cap"><span class="sg-eq">👋 Ready</span><span id="sg-cap-t">Press play for a friendly voice tour, or just read the six steps below. Tap “Show me” on any step to jump straight to that screen.</span></div>
+
+      <div class="sg-grid">
+        <div class="sg-step" id="sg-s0" onclick="sgStepClick(0)">
+          <div class="sg-num">1</div>
+          <h4><span class="sg-ico">🔎</span>See jobs worth your time</h4>
+          <p class="sg-what"><b>What:</b> a clean list of real openings, already sorted by how well they fit you.</p>
+          <p class="sg-why"><b>Why:</b> you stop scrolling endless job boards and start with the <b>best matches first</b>.</p>
+          <button class="sg-show" onclick="event.stopPropagation();show('roles')">Show me →</button>
+        </div>
+        <div class="sg-step" id="sg-s1" onclick="sgStepClick(1)">
+          <div class="sg-num">2</div>
+          <h4><span class="sg-ico">📑</span>Check it's really a fit</h4>
+          <p class="sg-what"><b>What:</b> your CV and the job side by side, with an honest read of where you match.</p>
+          <p class="sg-why"><b>Why:</b> apply where you'll <b>shine</b>, and skip the ones that would just drain you.</p>
+          <button class="sg-show" onclick="event.stopPropagation();show('cmp')">Show me →</button>
+        </div>
+        <div class="sg-step" id="sg-s2" onclick="sgStepClick(2)">
+          <div class="sg-num">3</div>
+          <h4><span class="sg-ico">🧭</span>Know your strengths</h4>
+          <p class="sg-what"><b>What:</b> your top strengths in plain words, and the kinds of roles to avoid.</p>
+          <p class="sg-why"><b>Why:</b> that's your <b>confidence</b>, and the words for telling your own story well.</p>
+          <button class="sg-show" onclick="event.stopPropagation();show('edgefit')">Show me →</button>
+        </div>
+        <div class="sg-step" id="sg-s3" onclick="sgStepClick(3)">
+          <div class="sg-num">4</div>
+          <h4><span class="sg-ico">🤝</span>Reach a real person</h4>
+          <p class="sg-what"><b>What:</b> the actual named recruiter for the role, plus an email written for you.</p>
+          <p class="sg-why"><b>Why:</b> a <b>person can reply</b>. A faceless portal almost never does.</p>
+          <button class="sg-show" onclick="event.stopPropagation();show('recs')">Show me →</button>
+        </div>
+        <div class="sg-step" id="sg-s4" onclick="sgStepClick(4)">
+          <div class="sg-num">5</div>
+          <h4><span class="sg-ico">✉️</span>Send it, your way</h4>
+          <p class="sg-what"><b>What:</b> read the draft, make it yours, then send it from your own inbox.</p>
+          <p class="sg-why"><b>Why:</b> you're <b>always in control</b>, it sounds like you, and the app reminds you to follow up.</p>
+          <button class="sg-show" onclick="event.stopPropagation();show('outreach')">Show me →</button>
+        </div>
+        <div class="sg-step" id="sg-s5" onclick="sgStepClick(5)">
+          <div class="sg-num">6</div>
+          <h4><span class="sg-ico">📊</span>Track every reply</h4>
+          <p class="sg-what"><b>What:</b> who you contacted, who replied, and what to do next, all in one place.</p>
+          <p class="sg-why"><b>Why:</b> <b>nothing slips</b>, and you always know your very next move.</p>
+          <button class="sg-show" onclick="event.stopPropagation();show('track')">Show me →</button>
+        </div>
+      </div>
+
+      <div class="sg-faq">
+        <div class="sg-q"><b>What is this</b><span>Your job-search co-pilot. It finds roles, checks fit, writes the emails, tracks replies.</span></div>
+        <div class="sg-q"><b>Why use it</b><span>So a real person sees the real you, faster, with far less burnout.</span></div>
+        <div class="sg-q"><b>How it works</b><span>Follow the six steps. The app drafts, you decide and send. No tech skills needed.</span></div>
+        <div class="sg-q"><b>When</b><span>About 15 minutes a day. Open your list, send one good email, log the replies.</span></div>
+        <div class="sg-q"><b>Where</b><span>Everything lives in the tabs along the top. Tap a step's “Show me” to go there.</span></div>
+        <div class="sg-q"><b>Our promise</b><span>We never invent or inflate anything about you. Nothing is ever sent without you pressing send. Your details stay yours. The app is free to use, and your dignity comes first, always.</span></div>
+      </div>
+      <div class="sg-foot">You don't have to do it all today. One honest step a day adds up. The app handles the searching, sorting and drafting. You bring the human, your story, your judgement, your name on the send button. That's the part no machine can do, and the part that gets you hired.</div>
+    </div>
+  </div>
+  <script>
+  /* ---- Start-here guided tour: self-contained, on-device voice (no AI, no network) ---------------------
+     Narration uses the browser's own speechSynthesis with an American-female voice. Captions always show,
+     so it works fully with sound off too. Stays on this page and highlights each step (the user taps
+     "Show me" to visit a screen). voice.js/the counsel is independent and currently off; this never needs it. */
+  (function(){
+    var synth = window.speechSynthesis || null, fvoice = null;
+    function pickF(){
+      if(!synth) return;
+      var all = synth.getVoices() || [];
+      /* on-device only (localService!==false keeps it off the cloud), English, prefer a US female */
+      var local = all.filter(function(v){ return v.localService!==false && /^en($|[-_])/i.test(v.lang); });
+      var us = local.filter(function(v){ return /en[-_]?us/i.test(v.lang); });
+      var pool = us.length ? us : local;
+      var rank = ["Samantha","Ava","Allison","Aria","Jenny","Susan","Google US English","Karen","Zira","Microsoft Aria","Microsoft Jenny"];
+      for(var i=0;i<rank.length && !fvoice;i++){ fvoice = pool.filter(function(v){ return v.name.indexOf(rank[i])>=0; })[0] || null; }
+      if(!fvoice) fvoice = pool[0] || (all.filter(function(v){ return /en/i.test(v.lang); })[0]) || null;
+    }
+    if(synth){ pickF(); if(typeof synth.onvoiceschanged!=="undefined") synth.onvoiceschanged = pickF; }
+
+    var LINES = [
+      { el:null,  cap:"Welcome. Job hunting is tiring. Let me walk you through it in about a minute.", say:"Hi, and welcome. Looking for a job can feel lonely and exhausting. This app is here to carry the heavy lifting, so you can show up as your best, real self. Let me walk you through it. Six simple steps." },
+      { el:"sg-s0", cap:"Step 1. See the jobs worth your time.", say:"Step one. See the jobs worth your time. Open All Roles. We pull in real openings and sort them by how well they fit you, so you can stop scrolling endless job boards." },
+      { el:"sg-s1", cap:"Step 2. Check it's really a fit.", say:"Step two. Check it's really a fit. In Side by side, your CV sits next to the job, with an honest read of where you match and where you don't. Apply where you'll shine." },
+      { el:"sg-s2", cap:"Step 3. Know your strengths.", say:"Step three. Know your strengths. Strengths and Fit shows your top strengths in plain words, and the kinds of roles to skip. That is your confidence, and your story." },
+      { el:"sg-s3", cap:"Step 4. Reach a real person.", say:"Step four. Reach a real person. For each role, the app finds the actual named recruiter, not a black hole portal, and writes you a ready email. A person can reply. A portal rarely does." },
+      { el:"sg-s4", cap:"Step 5. Send it, your way.", say:"Step five. Send it, your way. Read the draft, make it yours, then send it from your own inbox. You are always in control, and it always sounds like you. Then the app reminds you to follow up." },
+      { el:"sg-s5", cap:"Step 6. Track every reply.", say:"Step six. Track every reply. The Tracker remembers who you contacted, who replied, and what is next, so nothing slips, and you always know your next move." },
+      { el:null,  cap:"That's it. Fifteen minutes a day. You've got this.", say:"That's it. You don't need to be techy. Just fifteen minutes a day. Open the top of your list, send one good email, and log the replies. You've got this. Press Show me on step one whenever you are ready." }
+    ];
+
+    var idx = -1, playing = false, timer = null;
+    function muted(){ try{ return localStorage.getItem("jsos_guide_mute")==="1"; }catch(e){ return false; } }
+    function setMuteUi(){ var b=document.getElementById("sg-voice"); if(b) b.textContent = muted() ? "🔇 Voice off" : "🔊 Voice"; }
+    function clearHi(){ for(var i=0;i<LINES.length;i++){ var e=LINES[i].el && document.getElementById(LINES[i].el); if(e) e.classList.remove("active"); } }
+    function caption(eq,t){ var a=document.getElementById("sg-cap-t"), q=document.querySelector("#sg-cap .sg-eq"); if(q)q.textContent=eq; if(a)a.textContent=t; }
+    function playLbl(p){ var b=document.getElementById("sg-play"); if(b) b.textContent = p ? "⏸ Pause tour" : "▶ Play the guided tour"; }
+    function stopSpeak(){ try{ if(synth) synth.cancel(); }catch(e){} }
+
+    function show_(i){
+      clearHi();
+      var L = LINES[i]; if(!L) return;
+      var e = L.el && document.getElementById(L.el);
+      if(e){ e.classList.add("active"); try{ e.scrollIntoView({behavior:"smooth",block:"center"}); }catch(_){ } }
+      caption(i===0?"👋 Welcome":(i===LINES.length-1?"✅ All set":"▶ Step "+i), L.cap);
+    }
+    function readTime(t){ return Math.max(2600, Math.min(11000, (String(t).split(/\s+/).length/2.7)*1000)); } // muted fallback pacing
+    function step(i){
+      idx = i; if(i>=LINES.length){ finish(); return; }
+      show_(i);
+      var L = LINES[i], next = function(){ if(!playing) return; timer = setTimeout(function(){ step(i+1); }, 220); };
+      if(synth && !muted()){
+        var u = new SpeechSynthesisUtterance(L.say);
+        if(fvoice) u.voice = fvoice;
+        u.rate = 1.04; u.pitch = 1.06; u.volume = 1;   // a touch quick and bright = clear, chippy
+        u.onend = next; u.onerror = next;
+        stopSpeak(); synth.speak(u);
+      } else {
+        timer = setTimeout(next, readTime(L.say));
+      }
+    }
+    function finish(){ playing=false; playLbl(false); clearTimeout(timer); }
+    window.sgToggle = function(){
+      if(playing){ playing=false; playLbl(false); clearTimeout(timer); stopSpeak(); caption("⏸ Paused","Paused. Press play to keep going, or tap any step to jump in."); return; }
+      playing=true; playLbl(true); var start = (idx<0||idx>=LINES.length)?0:idx; step(start);
+    };
+    window.sgReplay = function(){ clearTimeout(timer); stopSpeak(); playing=true; playLbl(true); step(0); };
+    window.sgMute = function(){ try{ localStorage.setItem("jsos_guide_mute", muted()?"0":"1"); }catch(e){} setMuteUi(); if(muted()) stopSpeak(); };
+    window.sgStepClick = function(i){ clearTimeout(timer); playing=true; playLbl(true); step(i+1); }; // cards are steps 1..6 -> LINES 1..6
+    window.sgStop = function(){ playing=false; clearTimeout(timer); stopSpeak(); playLbl(false); clearHi(); };
+    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", setMuteUi); else setMuteUi();
+  })();
+  </script>
 
   <!-- ============ OUTREACH PIPELINE (the main daily workflow) ============ -->
   <div id="view-outreach" style="display:none">
@@ -860,7 +1046,7 @@
     <label>Pay max (SGD, thousands)<input id="ar-pmax" type="number" inputmode="numeric" placeholder="e.g. 300"></label>
     <label>Recruiter / contact name<input id="ar-rname" type="text" placeholder="optional"></label>
     <label>Recruiter / contact email<input id="ar-remail" type="email" placeholder="optional"></label>
-    <label class="ar-wide">Posting link<input id="ar-url" type="url" placeholder="optional, e.g. the MyCareersFuture or LinkedIn URL"></label>
+    <label class="ar-wide">Posting link<span class="ar-urlrow"><input id="ar-url" type="url" placeholder="paste a job link, e.g. MyCareersFuture or LinkedIn"><button type="button" class="btn" id="ar-fetch" onclick="urFetch()" title="Pull the title, company and description from the link">⤓ Fetch</button></span></label>
   </div>
   <label class="ar-jd">Job description (paste it)<textarea id="ar-jd" rows="6" placeholder="Paste the full JD here for an honest fit read. Without it the read is only a rough triage off the title."></textarea></label>
   <div id="ar-msg" class="sub" style="min-height:16px;margin-top:6px"></div>
@@ -2880,7 +3066,7 @@ function saveCall(){const id=_callId;if(!id)return;const outcome=$('call-outcome
   if(statusOf(id)!=='applied'&&statusOf(id)!=='met')setStatus(id,'applied');
   closeOv('ov-call');renderOutreach();toast('Call logged: '+outcome+'.');}
 
-function show(v){['roles','recs','cmp','track','edgefit','counsel','cockpit','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='counsel'){const f=$('counsel-frame');if(f)f.src='board-review.html?t='+Date.now();}if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
+function show(v){['start','roles','recs','cmp','track','edgefit','counsel','cockpit','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});if(v!=='start'&&window.sgStop)window.sgStop();document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='counsel'){const f=$('counsel-frame');if(f)f.src='board-review.html?t='+Date.now();}if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
 /* phone hamburger: open/close the collapsed nav + utilities dropdown (no-op visuals on desktop) */
 function toggleNav(){const open=document.body.classList.toggle('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded',open?'true':'false');}
 function closeNav(){document.body.classList.remove('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded','false');}
@@ -3152,6 +3338,9 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
 #ov-addrole .ar-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 11px;margin-top:11px}
 #ov-addrole label{display:flex;flex-direction:column;font-size:11px;font-weight:600;color:#5a6b80;gap:3px}
 #ov-addrole label.ar-wide,#ov-addrole label.ar-jd{grid-column:1 / -1}
+#ov-addrole .ar-urlrow{display:flex;gap:6px}
+#ov-addrole .ar-urlrow input{flex:1 1 auto;min-width:0}
+#ov-addrole .ar-urlrow .btn{flex:none;align-self:stretch}
 #ov-addrole .ar-jd{display:flex;flex-direction:column;font-size:11px;font-weight:600;color:#5a6b80;gap:3px;margin-top:10px}
 #ov-addrole input,#ov-addrole textarea{font:inherit;font-size:13px;padding:7px 9px;border:1px solid #e2e8f0;border-radius:7px;color:#1a202c;background:#fff;width:100%;box-sizing:border-box}
 #ov-addrole textarea{resize:vertical;line-height:1.45}
@@ -3209,6 +3398,27 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
     var m=document.getElementById('ar-msg'); if(m)m.textContent='';
     document.getElementById('ov-addrole').classList.add('open');
     var t=document.getElementById('ar-title'); if(t)setTimeout(function(){t.focus();},30);
+  };
+  /* paste a job LINK -> pull the title, company and description automatically (server parses it, hosted only;
+     locally there is no server + CORS blocks cross-site fetches, so it guides the user to paste the JD). */
+  window.urFetch=async function(){
+    var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
+    var set=function(id,v){var e=document.getElementById(id);if(e&&v)e.value=v;};
+    var msg=document.getElementById('ar-msg'), btn=document.getElementById('ar-fetch');
+    var url=(g('ar-url')||'').trim();
+    if(!/^https?:\/\//i.test(url)){ if(msg)msg.textContent='Paste a job link (https://...) first, or just paste the description below.'; return; }
+    if(!window.JSOS_HOSTED){ if(msg)msg.textContent='Auto-fetch runs in the hosted app. For now, open the posting, copy the text, and paste it into the description box below.'; return; }
+    if(msg)msg.textContent='Fetching the posting...'; if(btn)btn.disabled=true;
+    try{
+      var sess=window.JSOS_SB?(await window.JSOS_SB.auth.getSession()).data.session:null;
+      var r=await fetch('/api/source',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+((sess&&sess.access_token)||'')},body:JSON.stringify({url:url})});
+      var d=await r.json().catch(function(){return{};});
+      if(!r.ok){ if(msg)msg.textContent=(d&&d.error)||'Could not read that link. Open it, copy the text, and paste the description below.'; return; }
+      set('ar-title',d.title); set('ar-co',d.company); set('ar-jd',d.jd);
+      if(typeof myCvCount==='function')try{myCvCount();}catch(e){}
+      if(msg)msg.textContent='Fetched. Check the details, add the pay if you know it, then Add role.';
+    }catch(e){ if(msg)msg.textContent='Could not reach the sourcing service. Open the posting, copy the text, and paste the description below.'; }
+    finally{ if(btn)btn.disabled=false; }
   };
   window.urSubmit=function(){
     var g=function(id){var e=document.getElementById(id);return e?e.value:'';};
