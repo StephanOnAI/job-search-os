@@ -400,6 +400,22 @@
     .sg-foot{font-size:12.5px;color:var(--muted);line-height:1.55;background:#fafcff;border:1px dashed var(--line);border-radius:9px;padding:11px 14px;margin-top:4px}
     @media(max-width:900px){.sg-grid{grid-template-columns:1fr 1fr}.sg-faq{grid-template-columns:1fr 1fr}}
     @media(max-width:560px){.sg-grid,.sg-faq{grid-template-columns:1fr}.sg-hero{padding:16px}}
+    /* simplified guide: one video + three panels, no scroll */
+    .sg-video{position:relative;min-height:clamp(220px,42vh,360px);background:#0e1d33;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 26px rgba(15,23,42,.16)}
+    .sg-video video{display:block;width:100%;max-height:48vh;object-fit:contain;background:#0e1d33}
+    .sg-vph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#dbe7f7;padding:30px 20px;background:linear-gradient(135deg,var(--navy),var(--navy2))}
+    .sg-vph .sg-vbadge{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:5px 13px;margin-bottom:13px}
+    .sg-vph h3{margin:0 0 6px;font-size:18px;color:#fff}
+    .sg-vph p{margin:0;font-size:13px;opacity:.88;max-width:460px;line-height:1.5}
+    .sg-panels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:13px 0 0}
+    .sg-p{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 16px}
+    .sg-p h4{margin:0 0 8px;font-size:13.5px;color:var(--navy)}
+    .sg-p p{margin:0;font-size:12.5px;color:#3a4658;line-height:1.5}
+    .sg-p.promise{background:#fafcff;border-left:3px solid var(--navy2)}
+    .sg-steps{margin:0;padding:0;list-style:none}
+    .sg-steps li{display:flex;gap:9px;font-size:12.5px;color:var(--ink);line-height:1.38;padding:3px 0}
+    .sg-steps li b{color:#fff;background:var(--navy2);min-width:18px;height:18px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+    @media(max-width:760px){.sg-panels{grid-template-columns:1fr}.sg-video video{max-height:40vh}}
     /* one-time first-visit nudge (bottom-right card) */
     .sg-nudge{position:fixed;right:18px;bottom:18px;z-index:60;max-width:300px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy2);border-radius:11px;box-shadow:0 8px 26px rgba(15,23,42,.22);padding:13px 30px 14px 15px;display:flex;flex-direction:column;gap:6px;animation:sgpop .25s ease}
     .sg-nudge b{font-size:13.5px;color:var(--navy)}
@@ -412,196 +428,58 @@
     @media(max-width:560px){.sg-nudge{right:12px;left:12px;bottom:12px;max-width:none}}
   </style>
   <div id="view-start" style="display:none">
-    <div class="pagehead"><span class="ph-ico">✨</span><div class="ph-t"><h2>Start here</h2><p>A one-minute tour of how to find a job that genuinely fits you. Press play and follow along, or read the six steps.</p></div></div>
+    <div class="pagehead"><span class="ph-ico">✨</span><div class="ph-t"><h2>Start here</h2><p>Watch the short tour, then use the six steps. That is the whole app.</p></div></div>
     <div class="sg-wrap">
-      <div class="sg-hero">
-        <div class="sg-hero-t">
-          <h3>Welcome. Let's get you in front of the right people.</h3>
-          <p>Job hunting is tiring and lonely. This app carries the heavy lifting, finding roles, checking the fit, and writing the emails, so you can show up as your best, real self. You stay in control. You always press send.</p>
-        </div>
-        <div class="sg-ctrls">
-          <button class="sg-play" id="sg-play" onclick="sgToggle()">▶ Play the guided tour</button>
-          <div class="sg-mini">
-            <button onclick="sgReplay()">↺ Replay</button>
-            <button id="sg-voice" onclick="sgMute()" title="Turn the voice on or off">🔊 Voice</button>
-          </div>
+      <div class="sg-video" id="sg-video">
+        <video id="sg-vid" controls preload="metadata" playsinline style="display:none"></video>
+        <div class="sg-vph" id="sg-vph">
+          <span class="sg-vbadge">🎬 Guided tour</span>
+          <h3>A short walkthrough is on its way</h3>
+          <p>The six steps below already show you exactly how to use the app to find a job that genuinely fits you. The video will land right here.</p>
         </div>
       </div>
-      <div class="sg-cap" id="sg-cap"><span class="sg-eq">👋 Ready</span><span id="sg-cap-t">Press play for a friendly voice tour, or just read the six steps below. Tap “Show me” on any step to jump straight to that screen.</span></div>
-
-      <div class="sg-grid">
-        <div class="sg-step" id="sg-s0" onclick="sgStepClick(0)">
-          <div class="sg-num">1</div>
-          <h4><span class="sg-ico">🔎</span>See jobs worth your time</h4>
-          <p class="sg-what"><b>What:</b> a clean list of real openings, already sorted by how well they fit you.</p>
-          <p class="sg-why"><b>Why:</b> you stop scrolling endless job boards and start with the <b>best matches first</b>.</p>
-          <button class="sg-show" onclick="event.stopPropagation();show('roles')">Show me →</button>
+      <div class="sg-panels">
+        <div class="sg-p">
+          <h4>What this is</h4>
+          <p>Your job-search co-pilot. It finds real roles, checks how well each one fits you, writes the recruiter email, and tracks every reply. You always read it and press send yourself.</p>
         </div>
-        <div class="sg-step" id="sg-s1" onclick="sgStepClick(1)">
-          <div class="sg-num">2</div>
-          <h4><span class="sg-ico">📑</span>Check it's really a fit</h4>
-          <p class="sg-what"><b>What:</b> your CV and the job side by side, with an honest read of where you match.</p>
-          <p class="sg-why"><b>Why:</b> apply where you'll <b>shine</b>, and skip the ones that would just drain you.</p>
-          <button class="sg-show" onclick="event.stopPropagation();show('cmp')">Show me →</button>
+        <div class="sg-p">
+          <h4>How to use it, in six steps</h4>
+          <ul class="sg-steps">
+            <li><b>1</b><span>See jobs worth your time, sorted by fit <a href="#" onclick="show('roles');return false">(All Roles)</a></span></li>
+            <li><b>2</b><span>Check it's really a fit <a href="#" onclick="show('cmp');return false">(Side by side)</a></span></li>
+            <li><b>3</b><span>Know your strengths <a href="#" onclick="show('edgefit');return false">(Strengths &amp; Fit)</a></span></li>
+            <li><b>4</b><span>Reach a real recruiter <a href="#" onclick="show('recs');return false">(Recruiters)</a></span></li>
+            <li><b>5</b><span>Send it your way <a href="#" onclick="show('outreach');return false">(Outreach)</a></span></li>
+            <li><b>6</b><span>Track every reply <a href="#" onclick="show('track');return false">(Tracker)</a></span></li>
+          </ul>
         </div>
-        <div class="sg-step" id="sg-s2" onclick="sgStepClick(2)">
-          <div class="sg-num">3</div>
-          <h4><span class="sg-ico">🧭</span>Know your strengths</h4>
-          <p class="sg-what"><b>What:</b> your top strengths in plain words, and the kinds of roles to avoid.</p>
-          <p class="sg-why"><b>Why:</b> that's your <b>confidence</b>, and the words for telling your own story well.</p>
-          <button class="sg-show" onclick="event.stopPropagation();show('edgefit')">Show me →</button>
-        </div>
-        <div class="sg-step" id="sg-s3" onclick="sgStepClick(3)">
-          <div class="sg-num">4</div>
-          <h4><span class="sg-ico">🤝</span>Reach a real person</h4>
-          <p class="sg-what"><b>What:</b> the actual named recruiter for the role, plus an email written for you.</p>
-          <p class="sg-why"><b>Why:</b> a <b>person can reply</b>. A faceless portal almost never does.</p>
-          <button class="sg-show" onclick="event.stopPropagation();show('recs')">Show me →</button>
-        </div>
-        <div class="sg-step" id="sg-s4" onclick="sgStepClick(4)">
-          <div class="sg-num">5</div>
-          <h4><span class="sg-ico">✉️</span>Send it, your way</h4>
-          <p class="sg-what"><b>What:</b> read the draft, make it yours, then send it from your own inbox.</p>
-          <p class="sg-why"><b>Why:</b> you're <b>always in control</b>, it sounds like you, and the app reminds you to follow up.</p>
-          <button class="sg-show" onclick="event.stopPropagation();show('outreach')">Show me →</button>
-        </div>
-        <div class="sg-step" id="sg-s5" onclick="sgStepClick(5)">
-          <div class="sg-num">6</div>
-          <h4><span class="sg-ico">📊</span>Track every reply</h4>
-          <p class="sg-what"><b>What:</b> who you contacted, who replied, and what to do next, all in one place.</p>
-          <p class="sg-why"><b>Why:</b> <b>nothing slips</b>, and you always know your very next move.</p>
-          <button class="sg-show" onclick="event.stopPropagation();show('track')">Show me →</button>
+        <div class="sg-p promise">
+          <h4>Our promise</h4>
+          <p>About 15 minutes a day. We never invent or inflate anything about you, nothing is sent without you, your details stay yours, and it is free to use. Your dignity comes first, always.</p>
         </div>
       </div>
-
-      <div class="sg-faq">
-        <div class="sg-q"><b>What is this</b><span>Your job-search co-pilot. It finds roles, checks fit, writes the emails, tracks replies.</span></div>
-        <div class="sg-q"><b>Why use it</b><span>So a real person sees the real you, faster, with far less burnout.</span></div>
-        <div class="sg-q"><b>How it works</b><span>Follow the six steps. The app drafts, you decide and send. No tech skills needed.</span></div>
-        <div class="sg-q"><b>When</b><span>About 15 minutes a day. Open your list, send one good email, log the replies.</span></div>
-        <div class="sg-q"><b>Where</b><span>Everything lives in the tabs along the top. Tap a step's “Show me” to go there.</span></div>
-        <div class="sg-q"><b>Our promise</b><span>We never invent or inflate anything about you. Nothing is ever sent without you pressing send. Your details stay yours. The app is free to use, and your dignity comes first, always.</span></div>
-      </div>
-      <div class="sg-foot">You don't have to do it all today. One honest step a day adds up. The app handles the searching, sorting and drafting. You bring the human, your story, your judgement, your name on the send button. That's the part no machine can do, and the part that gets you hired.</div>
     </div>
   </div>
   <script>
-  /* ---- Start-here guided tour: on-device voice, captions always on -------------------------------------
-     Narration plays INSTANTLY with the browser's own speechSynthesis (an American-female voice), and when
-     the page is served over http it warms a high-quality on-device neural voice (Kokoro af_bella, American
-     female) in the BACKGROUND so later steps/replays upgrade automatically. Kokoro synthesizes in WASM on
-     this machine: the library + model download once from a CDN then the browser caches them, and the text
-     and audio NEVER leave the device. Captions always show, so it works fully muted too. No cloud AI: this
-     never calls a model API (local-checks no_ai_on_render stays green). voice.js/the counsel is independent. */
+  /* ---- Start-here guide: a short pre-rendered video + static panels. No live TTS in the browser ---------
+     The narration is baked into the video at BUILD time, so nothing heavy (no neural voice, no main-thread
+     synthesis) ever runs on the user's device. That removes the "Page Unresponsive" hang on weak hardware.
+     This script only manages the video placeholder fallback and the one-time first-visit nudge. */
   (function(){
-    var synth = window.speechSynthesis || null, fvoice = null;
-    var httpOrigin = /^https?:$/.test(location.protocol);
-    var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "");
-    var GUIDE_VOICE = "af_bella"; // Kokoro American-female voice: clear and bright
-    function pickF(){
-      if(!synth) return;
-      var all = synth.getVoices() || [];
-      /* on-device only (localService!==false keeps it off the cloud), English, prefer a US female */
-      var local = all.filter(function(v){ return v.localService!==false && /^en($|[-_])/i.test(v.lang); });
-      var us = local.filter(function(v){ return /en[-_]?us/i.test(v.lang); });
-      var pool = us.length ? us : local;
-      var rank = ["Samantha","Ava","Allison","Aria","Jenny","Susan","Google US English","Karen","Zira","Microsoft Aria","Microsoft Jenny"];
-      for(var i=0;i<rank.length && !fvoice;i++){ fvoice = pool.filter(function(v){ return v.name.indexOf(rank[i])>=0; })[0] || null; }
-      if(!fvoice) fvoice = pool[0] || (all.filter(function(v){ return /en/i.test(v.lang); })[0]) || null;
+    var vid = document.getElementById("sg-vid"), vph = document.getElementById("sg-vph");
+    function hidePh(){ if(vph) vph.style.display="none"; }
+    function showPh(){ if(vph) vph.style.display="flex"; }
+    if(vid){
+      vid.addEventListener("loadeddata", hidePh);   // a real video is present -> show it, drop the placeholder
+      vid.addEventListener("playing", hidePh);
+      vid.addEventListener("error", showPh);        // no video yet -> keep the friendly placeholder
+      var src = vid.querySelector("source"); if(src) src.addEventListener("error", showPh);
     }
-    if(synth){ pickF(); if(typeof synth.onvoiceschanged!=="undefined") synth.onvoiceschanged = pickF; }
+    /* pause the video whenever we leave the Start tab (show() calls this) */
+    window.sgStop = function(){ try{ if(vid && !vid.paused) vid.pause(); }catch(e){} };
 
-    /* ---- premium on-device neural voice (Kokoro), loaded lazily on the first Play gesture ---- */
-    var kokoro=null, kokoroLoading=null, kokoroBroken=false, ac=null, curSrc=null, premiumOn=false;
-    function stopSource(){ try{ if(curSrc){ curSrc.onended=null; curSrc.stop(); } }catch(e){} curSrc=null; }
-    function playPCM(pcm, rate, onend){
-      try{
-        if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)();
-        if(ac.state==="suspended"){ try{ ac.resume(); }catch(e){} }
-        var buf = ac.createBuffer(1, pcm.length, rate||24000);
-        buf.getChannelData(0).set(pcm);
-        stopSource();
-        curSrc = ac.createBufferSource(); curSrc.buffer=buf; curSrc.connect(ac.destination);
-        curSrc.onended = function(){ if(onend) onend(); };
-        curSrc.start();
-      }catch(e){ if(onend) onend(); }
-    }
-    function ensureKokoro(){
-      if(kokoro) return Promise.resolve(kokoro);
-      if(kokoroLoading) return kokoroLoading;
-      if(!httpOrigin) return Promise.reject(new Error("not http"));
-      kokoroLoading = import("https://esm.sh/kokoro-js@1.2.1")
-        .then(function(mod){ return mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: isMobile?"q4":"q8", device:"wasm" }); })
-        .then(function(k){ kokoro=k; premiumOn=true; setMuteUi(); return k; })
-        .catch(function(e){ kokoroBroken=true; throw e; });
-      return kokoroLoading;
-    }
-    function warmPremium(){ if(httpOrigin && !kokoro && !kokoroBroken && !muted()) ensureKokoro().catch(function(){}); }
-    function genKokoro(text, onend){
-      kokoro.generate(text, { voice: GUIDE_VOICE })
-        .then(function(a){ playPCM(a.audio||a.data, a.sampling_rate||a.sampleRate||24000, onend); })
-        .catch(function(){ kokoroBroken=true; premiumOn=false; setMuteUi(); speakBrowser(text, onend); });
-    }
-    function speakBrowser(text, onend){
-      if(!synth){ if(onend) setTimeout(onend, readTime(text)); return; }
-      try{
-        var u = new SpeechSynthesisUtterance(text);
-        if(fvoice) u.voice = fvoice;
-        u.rate = 1.04; u.pitch = 1.06; u.volume = 1;   // a touch quick and bright = clear, chippy
-        u.onend = onend; u.onerror = onend;
-        synth.speak(u);
-      }catch(e){ if(onend) onend(); }
-    }
-
-    var LINES = [
-      { el:null,  cap:"Welcome. Job hunting is tiring. Let me walk you through it in about a minute.", say:"Hi, and welcome. Looking for a job can feel lonely and exhausting. This app is here to carry the heavy lifting, so you can show up as your best, real self. Let me walk you through it. Six simple steps." },
-      { el:"sg-s0", cap:"Step 1. See the jobs worth your time.", say:"Step one. See the jobs worth your time. Open All Roles. We pull in real openings and sort them by how well they fit you, so you can stop scrolling endless job boards." },
-      { el:"sg-s1", cap:"Step 2. Check it's really a fit.", say:"Step two. Check it's really a fit. In Side by side, your CV sits next to the job, with an honest read of where you match and where you don't. Apply where you'll shine." },
-      { el:"sg-s2", cap:"Step 3. Know your strengths.", say:"Step three. Know your strengths. Strengths and Fit shows your top strengths in plain words, and the kinds of roles to skip. That is your confidence, and your story." },
-      { el:"sg-s3", cap:"Step 4. Reach a real person.", say:"Step four. Reach a real person. For each role, the app finds the actual named recruiter, not a black hole portal, and writes you a ready email. A person can reply. A portal rarely does." },
-      { el:"sg-s4", cap:"Step 5. Send it, your way.", say:"Step five. Send it, your way. Read the draft, make it yours, then send it from your own inbox. You are always in control, and it always sounds like you. Then the app reminds you to follow up." },
-      { el:"sg-s5", cap:"Step 6. Track every reply.", say:"Step six. Track every reply. The Tracker remembers who you contacted, who replied, and what is next, so nothing slips, and you always know your next move." },
-      { el:null,  cap:"That's it. Fifteen minutes a day. You've got this.", say:"That's it. You don't need to be techy. Just fifteen minutes a day. Open the top of your list, send one good email, and log the replies. You've got this. Press Show me on step one whenever you are ready." }
-    ];
-
-    var idx = -1, playing = false, timer = null;
-    function muted(){ try{ return localStorage.getItem("jsos_guide_mute")==="1"; }catch(e){ return false; } }
-    function setMuteUi(){ var b=document.getElementById("sg-voice"); if(!b) return; if(muted()){ b.textContent="🔇 Voice off"; b.title="Turn the voice on"; } else { b.textContent = premiumOn ? "🔊 Voice ✨" : "🔊 Voice"; b.title = premiumOn ? "Natural voice on" : "Turn the voice on or off"; } }
-    function clearHi(){ for(var i=0;i<LINES.length;i++){ var e=LINES[i].el && document.getElementById(LINES[i].el); if(e) e.classList.remove("active"); } }
-    function caption(eq,t){ var a=document.getElementById("sg-cap-t"), q=document.querySelector("#sg-cap .sg-eq"); if(q)q.textContent=eq; if(a)a.textContent=t; }
-    function playLbl(p){ var b=document.getElementById("sg-play"); if(b) b.textContent = p ? "⏸ Pause tour" : "▶ Play the guided tour"; }
-    function stopSpeak(){ try{ if(synth) synth.cancel(); }catch(e){} stopSource(); }
-
-    function show_(i){
-      clearHi();
-      var L = LINES[i]; if(!L) return;
-      var e = L.el && document.getElementById(L.el);
-      if(e){ e.classList.add("active"); try{ e.scrollIntoView({behavior:"smooth",block:"center"}); }catch(_){ } }
-      caption(i===0?"👋 Welcome":(i===LINES.length-1?"✅ All set":"▶ Step "+i), L.cap);
-    }
-    function readTime(t){ return Math.max(2600, Math.min(11000, (String(t).split(/\s+/).length/2.7)*1000)); } // muted fallback pacing
-    function step(i){
-      idx = i; if(i>=LINES.length){ finish(); return; }
-      show_(i);
-      var L = LINES[i], spoke=false;
-      var next = function(){ if(!playing) return; if(spoke) return; spoke=true; timer = setTimeout(function(){ step(i+1); }, 220); };
-      if(muted()){ timer = setTimeout(next, readTime(L.say)); return; }
-      stopSpeak();
-      if(kokoro && !kokoroBroken){ genKokoro(L.say, next); }   // premium natural voice once it is ready
-      else { speakBrowser(L.say, next); warmPremium(); }        // instant browser voice now, upgrade later
-    }
-    function finish(){ playing=false; playLbl(false); clearTimeout(timer); }
-    window.sgToggle = function(){
-      if(playing){ playing=false; playLbl(false); clearTimeout(timer); stopSpeak(); caption("⏸ Paused","Paused. Press play to keep going, or tap any step to jump in."); return; }
-      warmPremium(); playing=true; playLbl(true); var start = (idx<0||idx>=LINES.length)?0:idx; step(start);
-    };
-    window.sgReplay = function(){ clearTimeout(timer); stopSpeak(); warmPremium(); playing=true; playLbl(true); step(0); };
-    window.sgMute = function(){ try{ localStorage.setItem("jsos_guide_mute", muted()?"0":"1"); }catch(e){} setMuteUi(); if(muted()) stopSpeak(); else warmPremium(); };
-    window.sgStepClick = function(i){ clearTimeout(timer); warmPremium(); playing=true; playLbl(true); step(i+1); }; // cards are steps 1..6 -> LINES 1..6
-    window.sgStop = function(){ playing=false; clearTimeout(timer); stopSpeak(); playLbl(false); clearHi(); };
-
-    /* one-time gentle nudge for first-time visitors, on whatever page they land on (default Outreach).
-       Shows once: dismissing it, or opening the Start-here tab by any route, sets jsos_guide_seen. */
+    /* one-time gentle nudge for first-time visitors, on whatever page they land on (default Outreach). */
     function markSeen(){ try{ localStorage.setItem("jsos_guide_seen","1"); }catch(e){} }
     window.sgMarkSeen = markSeen;
     window.sgNudge = function(){
@@ -610,13 +488,12 @@
         if(localStorage.getItem("jsos_guide_seen")==="1") return;
         if(document.getElementById("sg-nudge")) return;
         var n=document.createElement("div"); n.id="sg-nudge"; n.className="sg-nudge";
-        n.innerHTML='<span class="sg-nudge-x" title="Dismiss">×</span><b>👋 New here?</b><span>Take the 1-minute tour of how to use this to find a job that fits you.</span><button>Start the tour →</button>';
-        n.querySelector("button").onclick=function(){ markSeen(); n.remove(); if(window.show) show("start"); if(window.sgToggle) sgToggle(); };
+        n.innerHTML='<span class="sg-nudge-x" title="Dismiss">×</span><b>👋 New here?</b><span>See how to use this in six simple steps, with a short tour.</span><button>Show me →</button>';
+        n.querySelector("button").onclick=function(){ markSeen(); n.remove(); if(window.show) show("start"); if(vid){ try{ var p=vid.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){} } };
         n.querySelector(".sg-nudge-x").onclick=function(){ markSeen(); n.remove(); };
         document.body.appendChild(n);
       }catch(e){}
     };
-    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", setMuteUi); else setMuteUi();
   })();
   </script>
 
