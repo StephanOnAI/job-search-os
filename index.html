@@ -1771,7 +1771,7 @@ function recStageBadge(st){const c=PIPE_C[st]||['#555','#eee'],lbl=PIPE_LABEL[st
 function renderRecs(){renderCuratedRecs();renderDerivedRecs();hydrateMx($('view-recs'));}
 /* The hand-curated agencies to build a relationship with (recruiters.js). */
 function renderCuratedRecs(){const wrap=$('reclist');if(!wrap)return;
-  if(!RECRUITERS.length){wrap.innerHTML='<div class="banner">No recruiters.js loaded.</div>';return;}
+  if(!RECRUITERS.length){wrap.innerHTML=window.IS_OWNER!==false?'<div class="banner">No recruiters.js loaded.</div>':'<div class="banner">Your curated agency list is being built. The recruiters found on your own live roles appear just below.</div>';return;}
   const list=[...RECRUITERS].sort((a,b)=>b.score-a.score);wrap.innerHTML='';
   list.forEach((rc,i)=>{const id="rec:"+rc.firm,sd=statusOf(id);const rrs=recRoles(rc);
     const rolesAcc=rrs.length?`<div class="acc-h" style="cursor:pointer;margin:8px 0 0;color:var(--navy);font-weight:600;font-size:12.5px" onclick="toggleAcc(this)"><span class="acc-caret">▸</span> Roles they have posted (${rrs.length})</div><div class="acc-body" style="display:none;margin:6px 0 0"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--muted)"><th style="padding:3px 8px 3px 0;font-weight:600">Role</th><th style="padding:3px 8px;font-weight:600;white-space:nowrap">Posted</th><th style="padding:3px 0 3px 8px;font-weight:600">Status</th></tr></thead><tbody>${rrs.map(r=>{const idx=ROLES.indexOf(r);const a=ageDays(r);return `<tr style="border-top:1px solid var(--line,#eee)"><td style="padding:4px 8px 4px 0"><a href="#" onclick="openRole(ROLES[${idx}]);return false">${escA(cleanRole(r.role))}</a></td><td style="padding:4px 8px;color:var(--muted);white-space:nowrap">${a!=null?a+'d ago':'—'}</td><td style="padding:4px 0 4px 8px">${recStageBadge(pipeStageOf(r))}</td></tr>`;}).join('')}</tbody></table></div>`:'';
@@ -1958,7 +1958,7 @@ const isApplied=id=>{const s=statusOf(id);return s==='applied'||s==='met';};
 function openCmp(r){show('cmp');window.scrollTo(0,0);const sel=$('cmp-role');if(!sel)return;const iv=String(ROLES.indexOf(r));if([...sel.options].some(o=>o.value===iv)){sel.value=iv;cmpLoad();}}
 function renderCmp(){const sel=$('cmp-role');if(!sel)return;
   const list=cmpRoles();
-  if(!list.length){sel.innerHTML='<option>No live roles — run the pipeline</option>';
+  if(!list.length){sel.innerHTML=window.IS_OWNER!==false?'<option>No live roles yet (run the pipeline)</option>':'<option>Add a role to see your CV beside the job description</option>';
     ['cmp-jdmeta','cmp-jdnotes','cmp-to','cmp-fit','cmp-fitflag'].forEach(i=>$(i).textContent='');$('cmp-jd').value='';$('cmp-subj').value='';$('cmp-body').value='';return;}
   const prev=sel.value;
   sel.innerHTML=list.map(r=>{const ap=isApplied(roleId(r));return `<option value="${ROLES.indexOf(r)}">${ap?'✅ ':''}${cleanRole(r.role)}, ${inferCo(r.company)||r.company} (${composite(r.lenses)})${ap?' · applied':''}</option>`;}).join('');
@@ -1978,6 +1978,10 @@ function cmpZoomInit(){const z=getStore('jsos_zoom');
   ['cv','jd','em'].forEach(w=>applyZoom(w,z[w]??Z_DEF[w]));}
 async function cmpPasteJd(){try{const t=await navigator.clipboard.readText();if(t&&t.trim()){$('cmp-jd').value=t.trim();cmpSaveJd();cmpGrowJd();}else alert('Clipboard is empty — copy the JD text first, then click Paste JD.');}
   catch(e){alert('Your browser blocked clipboard access here. Click into the JD box and paste with Ctrl+V instead.');}}
+/* A generic inbox (careers@/talent@/hr@/info@...) with no named person is NOT a decided personal
+   recipient: a generic blast rarely lands and we never guess a personal address. Treated like "no named
+   contact" so the move becomes find-the-real-person-on-LinkedIn or apply via the portal. */
+function genericInbox(e){const l=String(e||'').trim().toLowerCase().split('@')[0];return /^(info|careers?|jobs?|hr|contact|admin|enquir(?:y|ies)|recruit(?:ing|ment)?|talent|hello|support|apply|applications?|people|hiring|office|general|mail)$/.test(l);}
 function cmpLoad(){const sel=$('cmp-role');const r=ROLES[+sel.value];if(!r)return;const id=roleId(r),ref=refUp(r);
   const _ap=isApplied(id);const _vc=$('view-cmp');if(_vc)_vc.classList.toggle('applied',_ap);const _ab=$('cmp-applied');if(_ab)_ab.style.display=_ap?'':'none';
   const _ms=$('cmp-marksent');if(_ms){_ms.innerHTML=_ap?'↩ Unmark sent':'✓ Mark sent';_ms.title=_ap?'Undo mark-sent, removes this from your Tracker':'Mark this application as sent, adds it to your Tracker for follow-up';_ms.classList.toggle('on',_ap);}
@@ -1989,15 +1993,21 @@ function cmpLoad(){const sel=$('cmp-role');const r=ROLES[+sel.value];if(!r)retur
   const manual=manualJd(r),autoJd=autoJdText(r);
   $('cmp-jd').value=(manual&&manual.trim())?manual:autoJd;
   const e=roleEmail(r);
-  const hasEmail=!!resolveEmail(r).email;
+  const _email=resolveEmail(r).email;
+  const hasEmail=!!_email;
+  const _named=!!cName(r);
+  const _genericOnly=hasEmail&&!_named&&genericInbox(_email);   // an inbox, but no person to address
+  const _personal=hasEmail&&!_genericOnly;                       // a real, decided recipient
   /* a named recruiter found via enrichment (e.g. from JobStreet) but with no verified email is
      "named_contact_found": surface the name + next step, never the false "No named contact". */
   const _rcN=roleContact(r).name||r.contactName||'';
   const _altSrc=((r.altSources||[]).map(a=>a&&a.platform).filter(pf=>pf&&pf!=='MyCareersFuture'))[0]||r.contactSource||'';
-  if(hasEmail){$('cmp-to').innerHTML=contactLineHtml(r);}
+  const _disc=roleDiscovery(r);
+  const _seniorHint='find the relevant finance leader on LinkedIn (country first, then APAC, then global) and reach out there yourself';
+  if(_personal){$('cmp-to').innerHTML=contactLineHtml(r);}
+  else if(_genericOnly){$('cmp-to').innerHTML='Only a generic inbox is listed ('+escA(_email)+'), not a named person. A generic blast rarely lands. Better: '+_seniorHint+', or apply via the portal. We never guess an unlisted personal email.'+(_disc?discoverySearchLinks(_disc):'');}
   else if(_rcN){$('cmp-to').innerHTML='Named recruiter found'+(_altSrc?(' on '+escA(_altSrc)):'')+': <b>'+escA(_rcN)+'</b>'+(r.eaReg?' · '+escA(r.eaReg):'')+(r.recruiterTag?' · '+escA(r.recruiterTag):'')+'.<br>No verified email yet. Suggested next step: find the recruiter on LinkedIn, or apply through the portal.';}
   else{
-    var _disc=roleDiscovery(r);
     var _bc=_disc&&_disc.bestContact;
     if(_bc&&(_disc.contactStatus==='possible_lead_needs_verification'||_disc.contactStatus==='named_contact_no_email')){
       $('cmp-to').innerHTML='Possible company lead found: <b>'+escA(_bc.name)+'</b>'+(_bc.title?', '+escA(_bc.title):'')+'. No verified email found.<br>Suggested next step: LinkedIn outreach or verify email manually.';
@@ -2005,8 +2015,8 @@ function cmpLoad(){const sel=$('cmp-role');const r=ROLES[+sel.value];if(!r)retur
       $('cmp-to').innerHTML='No named contact in this posting. The move here is to apply via the portal, not to cold-email an unlisted person.'+(_disc?discoverySearchLinks(_disc):'');
     }
   }
-  $('cmp-subj').value=hasEmail?e.subj:'';
-  $('cmp-body').value=hasEmail?e.body:(_rcN?('Named recruiter found'+(_altSrc?(' on '+_altSrc):'')+': '+_rcN+(r.eaReg?' ('+r.eaReg+')':'')+'. No verified email yet, so do not send a guessed address. Next step: find '+_rcN.split(/\s+/)[0]+' on LinkedIn, or apply through the official posting via “Open full posting ↗” above.'):'This posting lists no named contact, so a tailored email is not the move here. Use “Open full posting ↗” above to apply through the portal, or look up the hiring consultant on LinkedIn and reach out there.');
+  $('cmp-subj').value=_personal?e.subj:'';
+  $('cmp-body').value=_personal?e.body:(_genericOnly?('No named person is listed, only the generic inbox '+_email+', so a tailored personal email is not the move. Use “Open full posting ↗” above to apply through the portal, or '+_seniorHint+'.'):(_rcN?('Named recruiter found'+(_altSrc?(' on '+_altSrc):'')+': '+_rcN+(r.eaReg?' ('+r.eaReg+')':'')+'. No verified email yet, so do not send a guessed address. Next step: find '+_rcN.split(/\s+/)[0]+' on LinkedIn, or apply through the official posting via “Open full posting ↗” above.'):'This posting lists no named contact, so a tailored email is not the move here. Use “Open full posting ↗” above to apply through the portal, or look up the hiring consultant on LinkedIn and reach out there.'));
   const dl=$('cmp-cvdl');if(dl)dl.setAttribute('download',cvFileName(r));
   const _dec=roleDecision(r,$('cmp-jd').value||''),_dm=REC_STYLE[_dec.recommendation]||['•','#555','#eee'];const _de=$('cmp-decision');if(_de)_de.innerHTML=`<span style="background:${_dm[2]};color:${_dm[1]};border:1px solid ${_dm[1]}40;font-weight:700;border-radius:6px;padding:2px 8px;margin-right:6px">${_dm[0]} ${recUiLabel(_dec.recommendation)}</span>${noem(_dec.nextAction)}${recDupNotice(r)}`;
   cmpJdSrc();cmpDayFit();cmpCoverage();cmpCvCov();renderAtt(r);cmpDoc(cmpWhich);cmpGrowEmail();cmpGrowJd();}

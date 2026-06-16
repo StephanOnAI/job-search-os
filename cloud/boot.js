@@ -103,20 +103,55 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-  /* a small account control (bottom-right) once signed in: who you are, sign out, and delete-my-data (PDPA). */
+  /* account control (bottom-right) once signed in: who you are + your data rights (PDPA/GDPR): read the privacy
+     notice, export your data (access/portability), sign out, delete everything. */
   function accountBar() {
     var bar = document.getElementById("jsos-acct");
     if (!bar) {
       bar = document.createElement("div"); bar.id = "jsos-acct";
-      bar.setAttribute("style", "position:fixed;right:12px;bottom:12px;z-index:2147483640;display:flex;gap:8px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;box-shadow:0 6px 22px rgba(15,23,42,.16);font:12px system-ui,'Segoe UI',Arial");
+      bar.setAttribute("style", "position:fixed;right:12px;bottom:12px;z-index:2147483640;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end;max-width:min(94vw,460px);background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;box-shadow:0 6px 22px rgba(15,23,42,.16);font:12px system-ui,'Segoe UI',Arial");
       document.body.appendChild(bar);
     }
-    bar.innerHTML = '<span style="color:#5a6b80;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(USER.email || "Signed in") + "</span>" +
-      '<button id="jsos-signout" style="border:1px solid #e2e8f0;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;color:#1f3a5f">Sign out</button>' +
+    var btn = "border:1px solid #e2e8f0;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;color:#1f3a5f";
+    bar.innerHTML = '<span style="color:#5a6b80;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(USER.email || "Signed in") + "</span>" +
+      '<button id="jsos-privacy" style="' + btn + '">Privacy</button>' +
+      '<button id="jsos-export" style="' + btn + '">Export my data</button>' +
+      '<button id="jsos-signout" style="' + btn + '">Sign out</button>' +
       '<button id="jsos-delete" style="border:1px solid #f0c4c4;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;color:#9b2c2c">Delete my data</button>';
+    document.getElementById("jsos-privacy").onclick = window.jsosPrivacy;
+    document.getElementById("jsos-export").onclick = window.jsosExport;
     document.getElementById("jsos-signout").onclick = window.jsosSignOut;
     document.getElementById("jsos-delete").onclick = window.jsosDeleteConfirm;
   }
+
+  /* the privacy notice (PDPA/GDPR right to be informed): what, why, where, how long, your rights, contact. */
+  window.jsosPrivacy = function () {
+    gate(
+      '<div style="font-size:20px;font-weight:800;margin-bottom:10px">Privacy and your data</div>' +
+      '<div style="opacity:.92;text-align:left;font-size:13px;line-height:1.65;max-height:58vh;overflow:auto;padding-right:4px">' +
+      '<p style="margin:0 0 10px"><b>What we store:</b> only what you add, the roles you are chasing, your CV text, your notes and application status. We never scrape, buy or sell data.</p>' +
+      '<p style="margin:0 0 10px"><b>Why:</b> to score your fit, prepare your applications and track follow-ups. Nothing is ever sent on your behalf, you do that yourself.</p>' +
+      '<p style="margin:0 0 10px"><b>Where:</b> a Singapore-region database, private to your login. Row-level security means no other user can ever see your data.</p>' +
+      '<p style="margin:0 0 10px"><b>How long:</b> only while your account is active. Delete it any time and it is gone.</p>' +
+      '<p style="margin:0 0 10px"><b>Your rights:</b> access and export your data any time (Export my data), and erase all of it any time (Delete my data), both in the account bar.</p>' +
+      '<p style="margin:0"><b>Contact:</b> the app owner, at the email address you signed up through.</p>' +
+      '</div>' +
+      '<button id="jsos-priv-ok" style="width:100%;padding:11px;margin-top:14px;border-radius:8px;border:0;background:#fff;color:#0f2742;font-weight:700;font-size:15px;cursor:pointer">Close</button>'
+    );
+    document.getElementById("jsos-priv-ok").onclick = function () { hideGate(); };
+  };
+
+  /* export my data (PDPA/GDPR right of access + portability): download everything we hold for this user as JSON. */
+  window.jsosExport = function () {
+    var data = { exportedAt: new Date().toISOString(), account: { email: USER && USER.email }, profile: {}, state: {} };
+    ["ROLES", "JDS", "CONTACTS", "RECRUITERS", "CV_TEXT", "JS_PROFILE"].forEach(function (k) { if (typeof window[k] !== "undefined") data.profile[k] = window[k]; });
+    try { for (var i = 0; i < localStorage.length; i++) { var key = localStorage.key(i); if (/^jsos_/.test(key)) { try { data.state[key] = JSON.parse(localStorage.getItem(key)); } catch (e) { data.state[key] = localStorage.getItem(key); } } } } catch (e) {}
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "my-job-search-data-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  };
 
   window.jsosSignOut = function () {
     try { sb.auth.signOut(); } catch (e) {}
