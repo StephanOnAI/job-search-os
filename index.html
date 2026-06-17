@@ -27,7 +27,7 @@
   body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
   /* ONE compact top band: title + tabs + utilities on a single line (tabs wrap on narrow widths) */
   header{background:linear-gradient(135deg,#16294a,var(--navy) 45%,var(--navy2));color:#fff;padding:8px clamp(12px,1.6vw,24px) 0;position:sticky;top:0;z-index:40;border-bottom:2px solid rgba(99,128,255,.55);box-shadow:0 4px 16px rgba(15,23,42,.28)}
-  .hbar{display:flex;align-items:flex-end;gap:6px 12px;flex-wrap:wrap;position:relative}
+  .hbar{display:flex;align-items:flex-end;gap:6px 12px;flex-wrap:nowrap;position:relative}
   .hmain{min-width:0;flex-shrink:0;padding-bottom:8px;display:flex;align-items:flex-end;gap:9px}
   /* hamburger nav: DESKTOP keeps the inline strip (display:contents lets .tabs + .hact flow in .hbar
      exactly as before); the mark, current-section label and toggle are mobile-only (revealed at <=680px). */
@@ -39,11 +39,11 @@
   header h1{margin:0;font-size:clamp(17px,1.5vw,22px);font-weight:700;line-height:1.15;letter-spacing:-.01em;background:linear-gradient(180deg,#ffffff,#cdddff);-webkit-background-clip:text;background-clip:text;color:#fff;-webkit-text-fill-color:transparent}
   header p{margin:2px 0 0;font-size:clamp(10.5px,0.85vw,13px);opacity:.85}
   /* single-row tab strip: it flexes to share the bar with the title and action buttons, and only scrolls
-     horizontally (scrollbar hidden) if the window gets very narrow, so the header is always ONE row. */
-  /* tabs sit on their OWN full-width row so they never get cut off by the title or the right-hand buttons */
-  .tabs{display:flex;gap:3px;margin:3px 0 0;flex-wrap:nowrap;order:9;flex:1 1 100%;width:100%;min-width:0;overflow-x:auto;scrollbar-width:none}
+     horizontally (scrollbar hidden) if the window gets very narrow, so the header is always ONE row.
+     Inline (flex:1 1 auto, NOT 1 1 100%): a 100% basis forces the strip onto its own second row. */
+  .tabs{display:flex;gap:3px;align-self:flex-end;margin:0;flex-wrap:nowrap;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
-  .tab{padding:clamp(5px,0.5vw,8px) clamp(7px,0.7vw,12px);border:1px solid rgba(255,255,255,.22);border-bottom:none;background:rgba(255,255,255,.10);border-radius:8px 8px 0 0;cursor:pointer;font-size:clamp(11.5px,0.95vw,14px);font-weight:600;color:rgba(255,255,255,.88);white-space:nowrap}
+  .tab{padding:clamp(5px,0.5vw,8px) clamp(6px,0.55vw,10px);border:1px solid rgba(255,255,255,.22);border-bottom:none;background:rgba(255,255,255,.10);border-radius:8px 8px 0 0;cursor:pointer;font-size:clamp(11.5px,0.95vw,14px);font-weight:600;color:rgba(255,255,255,.88);white-space:nowrap}
   .tab:hover{background:rgba(255,255,255,.18);color:#fff}
   .tab.on{background:var(--bg);color:var(--navy);border-color:var(--bg)}
   /* flow in the flex bar (margin-left:auto pins it right) rather than position:absolute, so when the tab
@@ -3175,11 +3175,18 @@ renderRoles();renderRecs();renderLearn();renderEdge();show('outreach');if(window
 /* developer-only tabs: the QA Cockpit and Review counsel are operator tools. On an end-user profile page
    (not owner and no ?dev=1) they are hidden, so the end user sees only their product panels. The owner /
    default view keeps them, so there's dashboard is unchanged. */
-if(!window.DEV_VIEW){
+/* the OWNER/operator surfaces (QA Cockpit + Review counsel tabs, the raw Copy-JSON export, Diagnostics) show
+   ONLY on the super-user's own profile. Gate on IS_OWNER (whose profile is active), NOT DEV_VIEW, so that
+   previewing any other person's profile shows their clean product panel — and so a real end user never sees
+   operator tools. The profile switcher below stays on DEV_VIEW, so the owner can still switch back. */
+if(!window.IS_OWNER){
   ['tab-cockpit','tab-counsel'].forEach(function(id){var t=document.getElementById(id);if(t)t.style.display='none';});
-  /* also stop the operator iframes (board review, QA cockpit) from loading the owner's data on an
-     end-user profile page. The tabs are hidden, so these are never reachable here anyway. */
+  /* header operator buttons: the full Copy-JSON export (allJson) and Diagnostics are owner-only. */
+  document.querySelectorAll('[onclick="allJson()"],[onclick="openDiag()"]').forEach(function(b){b.style.display='none';});
+  /* stop the operator iframes (board review, QA cockpit) loading the owner's data on an end-user profile. */
   ['cockpit-frame','counsel-frame'].forEach(function(id){var f=document.getElementById(id);if(f)f.src='about:blank';});
+  /* if the hidden cockpit/counsel was the open tab (e.g. carried over), fall back to the default panel. */
+  try{var on=document.querySelector('.tab.on');if(on&&(on.id==='tab-cockpit'||on.id==='tab-counsel'))show('outreach');}catch(e){}
 }
 /* Owner-only render surfaces not yet generalised per profile (the Side-by-side CV preview is hardcoded to
    the owner's CV file). For any non-owner profile, replace it with a neutral placeholder so the owner's CV
