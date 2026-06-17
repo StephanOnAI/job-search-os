@@ -129,6 +129,7 @@
   /* OWNER Users page: a table of users (email + last active), invite by email, resend their sign-in link, or
      remove them. Magic-link only — no passwords. All data comes from /api/admin (service-role, owner-gated). */
   window.jsosUsers = function () {
+    if (typeof window.show === "function") return window.show("users");  // the full Users page is an owner tab now
     gate(
       '<div style="font-size:20px;font-weight:800;margin-bottom:10px">Users</div>' +
       '<div style="display:flex;gap:6px;margin-bottom:10px">' +

@@ -280,8 +280,6 @@
     .navmenu .tab.on{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.18)}
     /* phone: utilities (Copy JSON, Diagnostics, Hide personal data) are desktop actions; hide on phone entirely */
     .navmenu .hact{display:none}
-    /* phone: Review counsel is a desktop/dev review panel, hide it from the phone nav */
-    .navmenu #tab-counsel{display:none}
     .wrap{padding:0 10px 24px}
     .pagehead{padding:6px 11px;margin:10px 0}
     #view-cockpit .pagehead{display:none} /* phone: drop the QA Cockpit telemetry blurb, let the cockpit lead */
@@ -348,8 +346,8 @@
         <div class="tab" id="tab-recs" onclick="show('recs')">Recruiters</div>
         <div class="tab" id="tab-cmp" onclick="show('cmp')">📑 Side by side</div>
         <div class="tab" id="tab-edgefit" onclick="show('edgefit')">🧭 Strengths &amp; Fit</div>
-        <div class="tab" id="tab-counsel" onclick="show('counsel')">⚖️ Review counsel</div>
         <div class="tab" id="tab-cockpit" onclick="show('cockpit')">🛰 QA Cockpit</div>
+        <div class="tab" id="tab-users" onclick="show('users')">👥 Users</div>
       </div>
       <div class="hact">
         <button class="hbtn hmask" id="mask-pii" aria-pressed="false" onclick="window.DEMO=!window.DEMO;this.classList.toggle('on',window.DEMO);this.setAttribute('aria-pressed',window.DEMO)" title="Off = your private full view. On = masks phone, email, LinkedIn and recruiter contact details so a screenshot or Copy JSON export is safe to share.">🔒 Share-safe</button>
@@ -431,7 +429,7 @@
     <div class="pagehead"><span class="ph-ico">✨</span><div class="ph-t"><h2>Start here</h2><p>Watch the short tour, then use the six steps. That is the whole app.</p></div></div>
     <div class="sg-wrap">
       <div class="sg-video" id="sg-video">
-        <video id="sg-vid" controls preload="metadata" playsinline style="display:none"></video>
+        <video id="sg-vid" controls preload="metadata" playsinline poster="assets/guide-poster.jpg"><source src="assets/guide-tour.mp4" type="video/mp4"></video>
         <div class="sg-vph" id="sg-vph">
           <span class="sg-vbadge">🎬 Guided tour</span>
           <h3>A short walkthrough is on its way</h3>
@@ -834,13 +832,17 @@
     <div id="edge-body"></div>
   </div>
 
-  <div id="view-counsel" style="display:none">
-    <div class="pagehead"><span class="ph-ico">⚖️</span><div class="ph-t"><h2>Review counsel</h2><p>An independent panel of AI models reviews this app for preview-readiness. This is its latest opinion. Regenerate it any time with <code>npm run review:board</code>.</p></div></div>
-    <iframe id="counsel-frame" src="board-review.html" title="AI Review Counsel" onload="window.autoFrame&&autoFrame(this)" style="width:100%;min-height:400px;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>
-  </div>
-
   <div id="view-cockpit" style="display:none">
     <iframe id="cockpit-frame" src="qa-cockpit.html" title="QA Cockpit" onload="window.autoFrame&&autoFrame(this)" style="width:100%;min-height:560px;border:none;border-radius:10px;background:var(--bg)"></iframe>
+  </div>
+
+  <!-- Users (owner only): invite people, see who is active or stuck, resend a sign-in link, remove. Metadata
+       only (email + activity) — never a user's private roles or CV. Magic-link login, no passwords. -->
+  <div id="view-users" style="display:none">
+    <div class="pagehead"><span class="ph-ico">👥</span><div class="ph-t"><h2>Users</h2><p>Everyone you have invited. You see only their email and activity, never their private roles or CV. They sign in with an email link, no password.</p></div></div>
+    <div class="us-bar"><input id="us-invite" type="email" placeholder="invite a user by email" autocomplete="off"><button class="btn primary" onclick="usInvite()">Invite</button><span id="us-msg" class="us-msg"></span></div>
+    <div id="us-summary" class="us-summary"></div>
+    <div id="us-body"><div class="us-empty">Loading…</div></div>
   </div>
 
   <footer>You stay in control: the panel vets and ranks, you review and send. Re-run the pipeline to refresh roles.</footer>
@@ -3014,7 +3016,7 @@ function saveCall(){const id=_callId;if(!id)return;const outcome=$('call-outcome
   if(statusOf(id)!=='applied'&&statusOf(id)!=='met')setStatus(id,'applied');
   closeOv('ov-call');renderOutreach();toast('Call logged: '+outcome+'.');}
 
-function show(v){['start','roles','recs','cmp','track','edgefit','counsel','cockpit','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});if(v!=='start'&&window.sgStop)window.sgStop();if(v==='start'){if(window.sgMarkSeen)window.sgMarkSeen();var _ng=document.getElementById('sg-nudge');if(_ng)_ng.remove();}document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='counsel'){const f=$('counsel-frame');if(f)f.src='board-review.html?t='+Date.now();}if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
+function show(v){['start','roles','recs','cmp','track','edgefit','cockpit','users','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});if(v!=='start'&&window.sgStop)window.sgStop();if(v==='start'){if(window.sgMarkSeen)window.sgMarkSeen();var _ng=document.getElementById('sg-nudge');if(_ng)_ng.remove();}document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='users'&&window.renderUsers)renderUsers();if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
 /* phone hamburger: open/close the collapsed nav + utilities dropdown (no-op visuals on desktop) */
 function toggleNav(){const open=document.body.classList.toggle('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded',open?'true':'false');}
 function closeNav(){document.body.classList.remove('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded','false');}
@@ -3024,7 +3026,7 @@ function closeOv(id){$(id).classList.remove('open');}
 $('sort').onchange=function(){window.colSort=null;renderRoles();};$('minscore').oninput=renderRoles;$('showexcl').onchange=renderRoles;$('groupfirm').onchange=renderRoles;$('showskip').onchange=renderRoles;$('hideapplied').onchange=renderRoles;
 /* iframe tabs report their own height (postMessage works on file:// where contentDocument is blocked),
    so the page scrolls normally with no nested scrollbar. */
-window.addEventListener('message',e=>{const h=e.data&&e.data.__frameHeight;if(!h||typeof h!=='number')return;['counsel-frame','cockpit-frame'].forEach(id=>{const f=$(id);if(f&&f.contentWindow===e.source)f.style.height=(h+20)+'px';});});
+window.addEventListener('message',e=>{const h=e.data&&e.data.__frameHeight;if(!h||typeof h!=='number')return;['cockpit-frame'].forEach(id=>{const f=$(id);if(f&&f.contentWindow===e.source)f.style.height=(h+20)+'px';});});
 $('ov').onclick=e=>{if(e.target.id==='ov')closeOv('ov');};$('ovr').onclick=e=>{if(e.target.id==='ovr')closeOv('ovr');};$('ovs').onclick=e=>{if(e.target.id==='ovs')closeOv('ovs');};
 ['ov-reply','ov-call'].forEach(idv=>{const el=$(idv);if(el)el.onclick=e=>{if(e.target.id===idv)closeOv(idv);};});
 $('src-banner').innerHTML=IS_SAMPLE?'⚠ Showing sample data — run the pipeline (Opts/pipeline) to load real roles.':(ROLES.length?`✅ ${ROLES.length} real roles loaded from the pipeline. Recruiter-posted roles ranked first.`:'No roles sourced for this profile yet. They appear here once the pipeline runs for this profile.');
@@ -3172,21 +3174,21 @@ async function jsosPullState(rerender){
 }
 
 renderRoles();renderRecs();renderLearn();renderEdge();show('outreach');if(window.sgNudge)setTimeout(window.sgNudge,700);
-/* developer-only tabs: the QA Cockpit and Review counsel are operator tools. On an end-user profile page
-   (not owner and no ?dev=1) they are hidden, so the end user sees only their product panels. The owner /
-   default view keeps them, so there's dashboard is unchanged. */
-/* the OWNER/operator surfaces (QA Cockpit + Review counsel tabs, the raw Copy-JSON export, Diagnostics) show
+/* developer-only tabs: the QA Cockpit is an operator tool. On an end-user profile page
+   (not owner and no ?dev=1) it is hidden, so the end user sees only their product panels. The owner /
+   default view keeps it, so there's dashboard is unchanged. */
+/* the OWNER/operator surfaces (QA Cockpit tab, the raw Copy-JSON export, Diagnostics) show
    ONLY on the super-user's own profile. Gate on IS_OWNER (whose profile is active), NOT DEV_VIEW, so that
    previewing any other person's profile shows their clean product panel — and so a real end user never sees
    operator tools. The profile switcher below stays on DEV_VIEW, so the owner can still switch back. */
 if(!window.IS_OWNER){
-  ['tab-cockpit','tab-counsel'].forEach(function(id){var t=document.getElementById(id);if(t)t.style.display='none';});
+  ['tab-cockpit','tab-users'].forEach(function(id){var t=document.getElementById(id);if(t)t.style.display='none';});
   /* header operator buttons: the full Copy-JSON export (allJson) and Diagnostics are owner-only. */
   document.querySelectorAll('[onclick="allJson()"],[onclick="openDiag()"]').forEach(function(b){b.style.display='none';});
-  /* stop the operator iframes (board review, QA cockpit) loading the owner's data on an end-user profile. */
-  ['cockpit-frame','counsel-frame'].forEach(function(id){var f=document.getElementById(id);if(f)f.src='about:blank';});
-  /* if the hidden cockpit/counsel was the open tab (e.g. carried over), fall back to the default panel. */
-  try{var on=document.querySelector('.tab.on');if(on&&(on.id==='tab-cockpit'||on.id==='tab-counsel'))show('outreach');}catch(e){}
+  /* stop the operator iframe (QA cockpit) loading the owner's data on an end-user profile. */
+  ['cockpit-frame'].forEach(function(id){var f=document.getElementById(id);if(f)f.src='about:blank';});
+  /* if the hidden cockpit was the open tab (e.g. carried over), fall back to the default panel. */
+  try{var on=document.querySelector('.tab.on');if(on&&on.id==='tab-cockpit')show('outreach');}catch(e){}
 }
 /* Owner-only render surfaces not yet generalised per profile (the Side-by-side CV preview is hardcoded to
    the owner's CV file). For any non-owner profile, replace it with a neutral placeholder so the owner's CV
@@ -3442,6 +3444,73 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
     if(dl)dl.style.display=''; if(pdf)pdf.style.display='';
     if(typeof _cct==='function') return _cct.apply(this,arguments);
   };
+})();
+</script>
+<style>
+/* Users page (owner only) */
+.us-bar{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
+.us-bar input{flex:0 1 320px;min-width:0;padding:8px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;color:var(--ink);background:#fff}
+.us-bar input:focus{outline:none;border-color:#2c5282;box-shadow:0 0 0 2px rgba(44,82,130,.15)}
+.us-msg{font-size:12px;color:var(--muted)}
+.us-summary{font-size:13px;color:var(--muted);margin:0 0 10px}
+.us-summary b{color:var(--navy)}
+.us-empty{padding:22px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;line-height:1.55;background:#fafcff;text-align:center;max-width:70ch;margin:0 auto}
+.us-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.us-tbl th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:700;padding:6px 10px;border-bottom:1px solid var(--line)}
+.us-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);vertical-align:middle}
+.us-tbl tr.us-nudge td{background:#fffbf0}
+.us-tag{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:1px 7px;border-radius:5px;color:#fff}
+.us-tag.ok{background:var(--good)}
+.us-tag.warn{background:var(--mid)}
+.us-acts{white-space:nowrap}
+.us-acts .btn.danger{color:#9b2c2c;border-color:#f0c4c4}
+</style>
+<script>
+/* Users page logic (owner only). Reads /api/admin (service-role, owner-gated). Metadata only: email + activity,
+   never a user's roles or CV. Magic-link only, no passwords. Local (no backend) shows a clear placeholder. */
+(function(){
+  function uEsc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function uToken(){ try{ return window.JSOS_SB.auth.getSession().then(function(s){return (s.data.session||{}).access_token||"";}); }catch(e){ return Promise.resolve(""); } }
+  function uPost(b){ return uToken().then(function(t){ return fetch("/api/admin",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify(b)}); }); }
+  function umsg(t){ var m=document.getElementById("us-msg"); if(m)m.textContent=t; }
+  window.renderUsers=function(){
+    var body=document.getElementById("us-body"), sum=document.getElementById("us-summary"); umsg("");
+    if(!body)return;
+    if(!window.JSOS_HOSTED){ if(sum)sum.innerHTML=""; body.innerHTML='<div class="us-empty">This page manages the people you invite, once the app is deployed. You will invite by email, see who is active or has not started, resend a sign-in link, or remove someone. Everyone signs in with an email link, no passwords. Nothing to show on the local copy.</div>'; return; }
+    body.innerHTML='<div class="us-empty">Loading…</div>';
+    uToken().then(function(t){ return fetch("/api/admin",{headers:{Authorization:"Bearer "+t}}); })
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){
+        if(!x.ok){ body.innerHTML='<div class="us-empty">'+uEsc(x.d.error||"Could not load users.")+'</div>'; return; }
+        var users=x.d.users||[], now=Date.now(), active=0, notStarted=0;
+        users.forEach(function(u){ var la=u.lastActive?Date.parse(u.lastActive):0; if(la&&now-la<7*864e5)active++; if(!u.lastActive)notStarted++; });
+        if(sum)sum.innerHTML="<b>"+users.length+"</b> user"+(users.length===1?"":"s")+" · <b>"+active+"</b> active this week"+(notStarted?" · <b>"+notStarted+"</b> not started yet":"");
+        if(!users.length){ body.innerHTML='<div class="us-empty">No users yet. Invite someone above and they get a sign-in link by email.</div>'; return; }
+        var rows=users.map(function(u){
+          var started=!!u.lastActive, la=started?new Date(u.lastActive).toISOString().slice(0,10):"—";
+          var status=started?'<span class="us-tag ok">active</span>':'<span class="us-tag warn">invited, not signed in</span>';
+          return "<tr"+(started?"":' class="us-nudge"')+"><td>"+uEsc(u.email)+"</td><td>"+status+"</td><td>"+la+'</td><td class="us-acts">'+
+            '<button class="btn" onclick="usResend(\''+uEsc(u.email)+'\')">Resend link</button> '+
+            '<button class="btn danger" onclick="usRemove(\''+uEsc(u.id)+'\',\''+uEsc(u.email)+'\')">Remove</button></td></tr>';
+        }).join("");
+        body.innerHTML='<table class="us-tbl"><thead><tr><th>Email</th><th>Status</th><th>Last active</th><th>Actions</th></tr></thead><tbody>'+rows+"</tbody></table>";
+      }).catch(function(){ body.innerHTML='<div class="us-empty">Could not reach the admin service (it runs on the deployed app).</div>'; });
+  };
+  window.usInvite=function(){
+    var el=document.getElementById("us-invite"), email=(el&&el.value||"").trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ umsg("Enter a valid email."); return; }
+    if(!window.JSOS_HOSTED){ umsg("Inviting works on the deployed app."); return; }
+    umsg("Inviting…");
+    uPost({action:"invite",email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){ umsg(x.ok?("Invited "+email+". They get a sign-in link."):(x.d.error||"Invite failed.")); if(x.ok){ el.value=""; renderUsers(); } })
+      .catch(function(){ umsg("Could not reach the admin service."); });
+  };
+  window.usResend=function(email){ if(!window.JSOS_HOSTED){ umsg("Works on the deployed app."); return; } umsg("Sending link…");
+    uPost({action:"resend",email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){ umsg(x.ok?("Sign-in link sent to "+email+"."):(x.d.error||"Failed.")); }).catch(function(){ umsg("Could not reach the admin service."); }); };
+  window.usRemove=function(id,email){ if(!confirm("Remove "+email+"? This deletes their account and all their data."))return; umsg("Removing…");
+    uPost({action:"remove",id:id,email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){ umsg(x.ok?"Removed.":(x.d.error||"Failed.")); if(x.ok)renderUsers(); }).catch(function(){ umsg("Could not reach the admin service."); }); };
 })();
 </script>
 </body>
