@@ -339,7 +339,6 @@
     <button class="navtoggle" id="navtoggle" type="button" aria-label="Open menu" aria-expanded="false" onclick="toggleNav()"><span class="nt"><span></span><span></span><span></span></span></button>
     <div class="navmenu" id="navmenu">
       <div class="tabs">
-        <div class="tab" id="tab-start" onclick="show('start')">✨ Start here</div>
         <div class="tab" id="tab-outreach" onclick="show('outreach')">📨 Outreach</div>
         <div class="tab" id="tab-track" onclick="show('track')">📊 Tracker</div>
         <div class="tab" id="tab-roles" onclick="show('roles')">All Roles</div>
@@ -362,138 +361,6 @@
 
 <div class="wrap">
 
-  <!-- ============ START HERE — the one-page, narrated walkthrough (shown to EVERY profile) ============ -->
-  <style>
-    /* Self-contained styles for the Start-here guide. Navy/white house look, kept compact to fit one screen. */
-    #view-start .pagehead p{max-width:none}
-    .sg-wrap{max-width:1100px;margin:0 auto}
-    .sg-hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:14px;padding:14px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-    .sg-hero-t{flex:1;min-width:240px}
-    .sg-hero-t h3{margin:0 0 5px;font-size:clamp(17px,2.1vw,22px);line-height:1.25}
-    .sg-hero-t p{margin:0;font-size:13.5px;line-height:1.5;opacity:.92}
-    .sg-ctrls{display:flex;flex-direction:column;gap:8px;min-width:190px}
-    .sg-play{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--navy);border:none;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-    .sg-play:hover{background:#eef3fb}
-    .sg-mini{display:flex;gap:8px}
-    .sg-mini button{flex:1;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 8px;font-size:12.5px;font-weight:600;cursor:pointer}
-    .sg-mini button:hover{background:rgba(255,255,255,.26)}
-    .sg-cap{margin:10px 0 2px;min-height:34px;background:#fafcff;border:1px solid var(--line);border-left:3px solid var(--navy2);border-radius:8px;padding:8px 13px;font-size:13.5px;color:var(--ink);line-height:1.45;display:flex;align-items:center;gap:9px}
-    .sg-cap .sg-eq{color:var(--navy2);font-weight:700;white-space:nowrap}
-    .sg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:11px 0}
-    .sg-step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .15s}
-    .sg-step:hover{border-color:#c9d8ec;box-shadow:0 3px 12px rgba(31,58,95,.08)}
-    .sg-step.active{border-color:var(--navy2);box-shadow:0 0 0 2px rgba(44,82,130,.35),0 6px 18px rgba(31,58,95,.14);transform:translateY(-1px)}
-    .sg-num{position:absolute;top:-9px;left:-9px;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.18)}
-    .sg-step h4{margin:2px 0 5px;font-size:14.5px;color:var(--navy)}
-    .sg-step h4 .sg-ico{margin-right:5px}
-    .sg-what{margin:0 0 6px;font-size:13px;color:var(--ink);line-height:1.42}
-    .sg-why{margin:0 0 9px;font-size:12px;color:var(--muted);line-height:1.42}
-    .sg-why b{color:#1a5b40;font-weight:600}
-    .sg-show{background:#eef3fb;border:1px solid #d6e2f2;color:var(--navy2);border-radius:7px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer}
-    .sg-show:hover{background:#e0ebf8}
-    .sg-faq{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:11px 0 6px}
-    .sg-q{background:#f1f5f9;border-radius:9px;padding:10px 12px}
-    .sg-q b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--navy2);margin-bottom:3px}
-    .sg-q span{font-size:12px;color:#3a4658;line-height:1.42}
-    .sg-foot{font-size:12.5px;color:var(--muted);line-height:1.55;background:#fafcff;border:1px dashed var(--line);border-radius:9px;padding:11px 14px;margin-top:4px}
-    @media(max-width:900px){.sg-grid{grid-template-columns:1fr 1fr}.sg-faq{grid-template-columns:1fr 1fr}}
-    @media(max-width:560px){.sg-grid,.sg-faq{grid-template-columns:1fr}.sg-hero{padding:16px}}
-    /* simplified guide: one video + three panels, no scroll */
-    .sg-video{position:relative;min-height:clamp(220px,42vh,360px);background:#0e1d33;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 26px rgba(15,23,42,.16)}
-    .sg-video video{display:block;width:100%;max-height:48vh;object-fit:contain;background:#0e1d33}
-    .sg-vph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#dbe7f7;padding:30px 20px;background:linear-gradient(135deg,var(--navy),var(--navy2))}
-    .sg-vph .sg-vbadge{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:5px 13px;margin-bottom:13px}
-    .sg-vph h3{margin:0 0 6px;font-size:18px;color:#fff}
-    .sg-vph p{margin:0;font-size:13px;opacity:.88;max-width:460px;line-height:1.5}
-    .sg-panels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:13px 0 0}
-    .sg-p{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 16px}
-    .sg-p h4{margin:0 0 8px;font-size:13.5px;color:var(--navy)}
-    .sg-p p{margin:0;font-size:12.5px;color:#3a4658;line-height:1.5}
-    .sg-p.promise{background:#fafcff;border-left:3px solid var(--navy2)}
-    .sg-steps{margin:0;padding:0;list-style:none}
-    .sg-steps li{display:flex;gap:9px;font-size:12.5px;color:var(--ink);line-height:1.38;padding:3px 0}
-    .sg-steps li b{color:#fff;background:var(--navy2);min-width:18px;height:18px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
-    @media(max-width:760px){.sg-panels{grid-template-columns:1fr}.sg-video video{max-height:40vh}}
-    /* one-time first-visit nudge (bottom-right card) */
-    .sg-nudge{position:fixed;right:18px;bottom:18px;z-index:60;max-width:300px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy2);border-radius:11px;box-shadow:0 8px 26px rgba(15,23,42,.22);padding:13px 30px 14px 15px;display:flex;flex-direction:column;gap:6px;animation:sgpop .25s ease}
-    .sg-nudge b{font-size:13.5px;color:var(--navy)}
-    .sg-nudge>span{font-size:12.5px;color:#3a4658;line-height:1.4}
-    .sg-nudge button{align-self:flex-start;margin-top:3px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer}
-    .sg-nudge button:hover{background:var(--navy2)}
-    .sg-nudge-x{position:absolute;top:6px;right:11px;font-size:17px;color:var(--muted);cursor:pointer;line-height:1}
-    .sg-nudge-x:hover{color:var(--ink)}
-    @keyframes sgpop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-    @media(max-width:560px){.sg-nudge{right:12px;left:12px;bottom:12px;max-width:none}}
-  </style>
-  <div id="view-start" style="display:none">
-    <div class="pagehead"><span class="ph-ico">✨</span><div class="ph-t"><h2>Start here</h2><p>Watch the short tour, then use the six steps. That is the whole app.</p></div></div>
-    <div class="sg-wrap">
-      <div class="sg-video" id="sg-video">
-        <video id="sg-vid" controls preload="metadata" playsinline poster="assets/guide-poster.jpg"><source src="assets/guide-tour.mp4" type="video/mp4"></video>
-        <div class="sg-vph" id="sg-vph">
-          <span class="sg-vbadge">🎬 Guided tour</span>
-          <h3>A short walkthrough is on its way</h3>
-          <p>The six steps below already show you exactly how to use the app to find a job that genuinely fits you. The video will land right here.</p>
-        </div>
-      </div>
-      <div class="sg-panels">
-        <div class="sg-p">
-          <h4>What this is</h4>
-          <p>Your job-search co-pilot. It finds real roles, checks how well each one fits you, writes the recruiter email, and tracks every reply. You always read it and press send yourself.</p>
-        </div>
-        <div class="sg-p">
-          <h4>How to use it, in six steps</h4>
-          <ul class="sg-steps">
-            <li><b>1</b><span>See jobs worth your time, sorted by fit <a href="#" onclick="show('roles');return false">(All Roles)</a></span></li>
-            <li><b>2</b><span>Check it's really a fit <a href="#" onclick="show('cmp');return false">(Side by side)</a></span></li>
-            <li><b>3</b><span>Know your strengths <a href="#" onclick="show('edgefit');return false">(Strengths &amp; Fit)</a></span></li>
-            <li><b>4</b><span>Reach a real recruiter <a href="#" onclick="show('recs');return false">(Recruiters)</a></span></li>
-            <li><b>5</b><span>Send it your way <a href="#" onclick="show('outreach');return false">(Outreach)</a></span></li>
-            <li><b>6</b><span>Track every reply <a href="#" onclick="show('track');return false">(Tracker)</a></span></li>
-          </ul>
-        </div>
-        <div class="sg-p promise">
-          <h4>Our promise</h4>
-          <p>About 15 minutes a day. We never invent or inflate anything about you, nothing is sent without you, your details stay yours, and it is free to use. Your dignity comes first, always.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-  /* ---- Start-here guide: a short pre-rendered video + static panels. No live TTS in the browser ---------
-     The narration is baked into the video at BUILD time, so nothing heavy (no neural voice, no main-thread
-     synthesis) ever runs on the user's device. That removes the "Page Unresponsive" hang on weak hardware.
-     This script only manages the video placeholder fallback and the one-time first-visit nudge. */
-  (function(){
-    var vid = document.getElementById("sg-vid"), vph = document.getElementById("sg-vph");
-    function hidePh(){ if(vph) vph.style.display="none"; }
-    function showPh(){ if(vph) vph.style.display="flex"; }
-    if(vid){
-      vid.addEventListener("loadeddata", hidePh);   // a real video is present -> show it, drop the placeholder
-      vid.addEventListener("playing", hidePh);
-      vid.addEventListener("error", showPh);        // no video yet -> keep the friendly placeholder
-      var src = vid.querySelector("source"); if(src) src.addEventListener("error", showPh);
-    }
-    /* pause the video whenever we leave the Start tab (show() calls this) */
-    window.sgStop = function(){ try{ if(vid && !vid.paused) vid.pause(); }catch(e){} };
-
-    /* one-time gentle nudge for first-time visitors, on whatever page they land on (default Outreach). */
-    function markSeen(){ try{ localStorage.setItem("jsos_guide_seen","1"); }catch(e){} }
-    window.sgMarkSeen = markSeen;
-    window.sgNudge = function(){
-      try{
-        if(navigator.webdriver) return;                                  // keep automated checks/screenshots clean
-        if(localStorage.getItem("jsos_guide_seen")==="1") return;
-        if(document.getElementById("sg-nudge")) return;
-        var n=document.createElement("div"); n.id="sg-nudge"; n.className="sg-nudge";
-        n.innerHTML='<span class="sg-nudge-x" title="Dismiss">×</span><b>👋 New here?</b><span>See how to use this in six simple steps, with a short tour.</span><button>Show me →</button>';
-        n.querySelector("button").onclick=function(){ markSeen(); n.remove(); if(window.show) show("start"); if(vid){ try{ var p=vid.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){} } };
-        n.querySelector(".sg-nudge-x").onclick=function(){ markSeen(); n.remove(); };
-        document.body.appendChild(n);
-      }catch(e){}
-    };
-  })();
-  </script>
 
   <!-- ============ OUTREACH PIPELINE (the main daily workflow) ============ -->
   <div id="view-outreach" style="display:none">
@@ -608,13 +475,13 @@
     <div class="controls">
       <label>Sort:
         <select id="sort">
+          <option value="score" selected>Overall fit (high→low)</option>
           <option value="recommended">Recommended order</option>
-          <option value="score">Overall fit (high→low)</option>
           <option value="paymax">Pay (high→low)</option>
           <option value="company">Company (A→Z)</option>
         </select>
       </label>
-      <span class="why-order" tabindex="0" title="Roles are shown by actionability first, then pay, fit, freshness and contact availability. You can still sort by overall fit if you prefer.">ⓘ Why this order?</span>
+      <span class="why-order" tabindex="0" title="Default sorts by overall fit, highest first. 'Recommended order' instead leads with actionability, then pay tier, fit, freshness and contact availability (the 300k+ mission view). Switch anytime in Sort.">ⓘ Why this order?</span>
       <label>Min overall fit: <span id="minlbl">0</span> <input type="range" id="minscore" min="0" max="100" value="0" /></label>
       <label><input type="checkbox" id="hideapplied" checked> Hide applied</label>
       <label><input type="checkbox" id="showskip"> Show skipped <span id="skipn" class="ctl-n"></span></label>
@@ -968,19 +835,28 @@
   <div class="fb-count" id="fb-count"></div>
 </div></div>
 
-<!-- Run job crawl modal. The dashboard never crawls or runs commands itself: it shows the manual terminal
-     command (copyable) and only reloads the page on an explicit click. No browser fetch, no auto-run. -->
+<!-- Run job crawl modal. When the dashboard is served by serve-sync.mjs (the normal case) the button runs
+     the crawl FOR REAL via POST /crawl on this machine and reloads when done. If the page was opened as a
+     file:// (no server to run it), it falls back to the manual terminal command. No AI, no auto-send. -->
 <div class="ov" id="ov-crawl"><div class="modal" style="max-width:560px">
   <span class="close" onclick="closeOv('ov-crawl')">×</span>
-  <h2>Run job crawl from terminal</h2>
-  <div class="sub">The dashboard cannot crawl new roles directly from the browser. Run the command below in your VS Code terminal, then refresh this page.</div>
-  <div class="field">Command</div>
-  <div class="emailbox" id="crawl-cmd" style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">cd Opts/pipeline &amp;&amp; npm run crawl &amp;&amp; npm run score</div>
-  <div class="attach">This fetches new recruiter listings, removes stale roles and rebuilds the scored role list.</div>
-  <div class="row-btns">
-    <button class="btn primary" id="crawl-copy-btn" onclick="crawlCopy(this)">Copy command</button>
-    <button class="btn" onclick="crawlRefresh()" title="Reload the dashboard so it picks up the freshly rebuilt role list">I have run it, refresh dashboard</button>
-    <button class="btn lnk" onclick="closeOv('ov-crawl')">Cancel</button>
+  <h2>Run job crawl</h2>
+  <!-- live state: the server is running the crawl for us -->
+  <div id="crawl-running" style="display:none">
+    <div class="sub" id="crawl-status">Searching for new roles. This can take a minute.</div>
+    <div class="attach">Fetching new recruiter listings and rebuilding the scored role list. The dashboard reloads automatically when it finishes.</div>
+  </div>
+  <!-- fallback: no local server (opened as a file), show the manual command -->
+  <div id="crawl-manual" style="display:none">
+    <div class="sub">This page was not opened from the local server, so it cannot run the crawl itself. Run the command below in your VS Code terminal, then refresh this page.</div>
+    <div class="field">Command</div>
+    <div class="emailbox" id="crawl-cmd" style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">cd Opts/pipeline &amp;&amp; npm run crawl &amp;&amp; npm run score</div>
+    <div class="attach">This fetches new recruiter listings, removes stale roles and rebuilds the scored role list.</div>
+    <div class="row-btns">
+      <button class="btn primary" id="crawl-copy-btn" onclick="crawlCopy(this)">Copy command</button>
+      <button class="btn" onclick="crawlRefresh()" title="Reload the dashboard so it picks up the freshly rebuilt role list">I have run it, refresh dashboard</button>
+      <button class="btn lnk" onclick="closeOv('ov-crawl')">Cancel</button>
+    </div>
   </div>
 </div></div>
 
@@ -1286,8 +1162,18 @@ function buildEmail(name,firm){
   const F=(window.CONTACTS&&CONTACTS.firms)||[];
   const f=F.find(x=>firm&&x.firm&&firm.toLowerCase().includes(x.firm.toLowerCase()));
   if(!f||!name)return null;
-  const parts=name.trim().split(/\s+/),first=slug(parts[0]),last=slug(parts[1]||parts.slice(1).join(''));
-  if(!first)return null;
+  // A catch-all firm MX accepts any address (real or fake), so a derived local-part can never be
+  // verified and must not be shown as a usable email — fall back to name + LinkedIn instead.
+  if(f.catchAll)return null;
+  const parts=name.trim().split(/\s+/);
+  // Only a clean two-token Western-order name (given + surname) maps reliably to {first}/{last}.
+  // Singaporean/Chinese names are often surname-first and/or carry an English given name appended
+  // last (e.g. "Chia Lan Xian Gina" -> the firm uses gina.chia, not chia.lan). With any other token
+  // count the first/last order is genuinely ambiguous, so we refuse to guess rather than emit a wrong
+  // address. Better no email (name + LinkedIn) than a fabricated one.
+  if(parts.length!==2)return null;
+  const first=slug(parts[0]),last=slug(parts[1]);
+  if(!first||!last)return null;
   const local=(f.pattern||'{first}{last}').replace('{first}',first).replace('{last}',last)
     .replace('{f}',first[0]||'').replace('{l}',last[0]||'');
   return local+'@'+f.domain;
@@ -1510,9 +1396,26 @@ function undoRoleSent(r){if(!r)return;const id=roleId(r);
 function adjustCad(delta){const s=weekState();s.adjust=(s.adjust||0)+delta;if(weekDerived()+s.adjust<0)s.adjust=-weekDerived();setStore('jsos_week',s);drawCad();const t=weekCount();toast((delta>0?'Added one. ':'Removed one. ')+'Now '+t+'/5 this week ('+weekDerived()+' from your Tracker'+(s.adjust?', '+(s.adjust>0?'+':'')+s.adjust+' manual':'')+').');}
 function resetWeek(){setStore('jsos_week',{week:isoWeek(),adjust:0});drawCad();toast('Manual adjustments cleared. The meter now shows your Tracker count for this week ('+weekDerived()+'/5).');}
 function drawUpdated(){const m=window.ROLES_META&&window.ROLES_META.updated;const el=$('last-upd');if(el)el.textContent=m?('Last crawl: '+new Date(m).toLocaleDateString()+' · '+(window.ROLES?window.ROLES.length:0)+' roles'):'';}
-/* The dashboard never crawls or runs commands. openCrawl shows a modal with the manual terminal
-   command; nothing reloads until the user explicitly confirms they have run it. */
-function openCrawl(){$('ov-crawl').classList.add('open');}
+/* openCrawl tries to run the crawl on the local server that is already serving this page (POST /crawl,
+   loopback-only on the server side). If that server answers, the work runs here and the page reloads
+   when it finishes. If there is no server (the page was opened as a file://), the fetch fails and we
+   fall back to the manual terminal command. The only AI-free, user-triggered fetch the app makes. */
+function crawlShow(which){$('crawl-running').style.display=which==='running'?'':'none';$('crawl-manual').style.display=which==='manual'?'':'none';}
+function openCrawl(){
+  $('ov-crawl').classList.add('open');
+  crawlShow('running');$('crawl-status').textContent='Searching for new roles. This can take a minute.';
+  fetch('/crawl',{method:'POST'})
+    .then(r=>r.ok?r.json():Promise.reject(new Error('no server')))
+    .then(()=>crawlPoll())
+    .catch(()=>crawlShow('manual'));   // no local server -> show the manual command
+}
+function crawlPoll(){
+  fetch('/crawl').then(r=>r.json()).then(s=>{
+    if(s.running){$('crawl-status').textContent=(s.step==='score'?'Ranking the new roles.':'Searching for new roles.')+' This can take a minute.';setTimeout(crawlPoll,2000);return;}
+    if(s.ok){$('crawl-status').textContent='Done. Reloading with the new roles.';setTimeout(()=>{closeOv('ov-crawl');location.reload();},900);}
+    else{$('crawl-status').textContent='The crawl could not finish'+(s.error?(': '+s.error):'')+'. Use the terminal command instead.';setTimeout(()=>crawlShow('manual'),1600);}
+  }).catch(()=>crawlShow('manual'));
+}
 function crawlCopy(btnEl){const cmd='cd Opts/pipeline && npm run crawl && npm run score';
   const flash=()=>{if(btnEl){const o=btnEl.textContent;btnEl.textContent='Copied';setTimeout(()=>{btnEl.textContent=o;},1400);}};
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=cmd;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();flash();};
@@ -1830,6 +1733,7 @@ function renderRoles(){
   if(grp)list.sort((a,b)=>(a.ex!==b.ex?(a.ex?1:-1):0)||firmKey(a.r).localeCompare(firmKey(b.r))||(b.c-a.c));
   else if(window.colSort){const _k=window.colSort.key,_d=window.colSort.dir==='asc'?1:-1;list.sort((a,b)=>a.ex!==b.ex?(a.ex?1:-1):((_k==='pay'?(a.r.payMax||0)-(b.r.payMax||0):a.c-b.c)*_d));}
   else if(sort==='recommended')list.sort(recSort);
+  else if(sort==='score')list.sort((a,b)=>a.ex!==b.ex?(a.ex?1:-1):(b.c-a.c)); // pure overall fit, highest first (gated-out always last)
   else list.sort((a,b)=>a.ex!==b.ex?(a.ex?1:-1):a.r.recruiter!==b.r.recruiter?(a.r.recruiter?-1:1):
     sort==='paymax'?b.r.payMax-a.r.payMax:sort==='company'?a.r.company.localeCompare(b.r.company):b.c-a.c);
   ['pay','fit'].forEach(k=>{const el=$('sarrow-'+k);if(el)el.textContent=(window.colSort&&window.colSort.key===k)?(window.colSort.dir==='asc'?'▲':'▼'):'⇅';});
@@ -1840,7 +1744,7 @@ function renderRoles(){
     const dots=['cfo','hh','coach','hr'].map(k=>{const L=r.lenses[k];return `<div class="dot" title="${escA(LENS_NAME[k]+' '+L.score+'. '+LENS_TIP[k]+(L.note?' '+noem(L.note):''))}" style="background:${col(L.score)}">${L.score}</div>`;}).join('');
     const tr=document.createElement('tr');if(o.ex)tr.className='excluded';else if(window.IS_OWNER&&statusOf(id)==='pass')tr.className='excluded';else if(o.rec==='reject')tr.className='skip';if(r.laneClass==='stretch')tr.classList.add('target-role');
     tr.innerHTML=`<td class="rank">${o.ex?'—':++n}</td>
-      <td><div class="role">${r.laneClass==='stretch'?`<span class="targetpin" title="The investment-counsellor / private-wealth direction David chose. Highlighted so it stands out.">★ Target</span>`:''}${inferCo(r.company)?`<span class="cotag">${inferCo(r.company)}</span>`:''}${r.url?`<a class="rolelink" href="${r.url}" target="_blank" rel="noopener">${cleanRole(r.role)}</a>`:cleanRole(r.role)}</div><div class="co">${noem(r.company)}${IS_SAMPLE?'<span class="sample">SAMPLE</span>':''}${(()=>{const rn=recruiterDisplayName(r);return rn?'<span class="rec">🤝 '+escA(rn)+'</span>':'';})()}${recDupBadge(r)}</div><span class="wlb" title="Estimated working hours and lifestyle load for this role.">🕘 ${wlbFor(r)}</span>${r.postedDate?`<span class="age age-${isStale(r)?'old':ageDays(r)>21?'mid':'new'}" title="Posted ${ageDays(r)} days ago.">🕒 ${ageDays(r)}d</span>`:''}${addedBadge(r)}${flagBadges(r)}${r.reportsTo?`<span class="age" style="background:#eef3fb;color:#2c5282;border:1px solid #d6e2f2" title="The JD names this reporting line. Use it as context for a warm, invited approach, never a guessed cold email.">↳ reports to ${escA(String(r.reportsTo).slice(0,42))}</span>`:''}</td>
+      <td><div class="role">${r.laneClass==='stretch'?`<span class="targetpin" title="${escA('Stretch lane: a step up beyond the core-fit roles, into the broader direction this search is reaching toward. '+(((r.lenses||{}).coach||{}).note||''))}">↗ Stretch</span>`:''}${inferCo(r.company)?`<span class="cotag">${inferCo(r.company)}</span>`:''}${r.url?`<a class="rolelink" href="${r.url}" target="_blank" rel="noopener">${cleanRole(r.role)}</a>`:cleanRole(r.role)}</div><div class="co">${noem(r.company)}${IS_SAMPLE?'<span class="sample">SAMPLE</span>':''}${(()=>{const rn=recruiterDisplayName(r);return rn?'<span class="rec">🤝 '+escA(rn)+'</span>':'';})()}${recDupBadge(r)}</div><span class="wlb" title="Estimated working hours and lifestyle load for this role.">🕘 ${wlbFor(r)}</span>${r.postedDate?`<span class="age age-${isStale(r)?'old':ageDays(r)>21?'mid':'new'}" title="Posted ${ageDays(r)} days ago.">🕒 ${ageDays(r)}d</span>`:''}${addedBadge(r)}${flagBadges(r)}${r.reportsTo?`<span class="age" style="background:#eef3fb;color:#2c5282;border:1px solid #d6e2f2" title="The JD names this reporting line. Use it as context for a warm, invited approach, never a guessed cold email.">↳ reports to ${escA(String(r.reportsTo).slice(0,42))}</span>`:''}</td>
       <td class="stat">${statusCell(r)}</td>
       <td class="pay">${r.payMin&&r.payMax?`$${r.payMin}k–$${r.payMax}k`:'<span style="color:var(--muted)">on application</span>'}</td>
       <td>${o.ex?'<span class="gatebad">EXCLUDED</span>':(hasTarget()?`<span class="score" style="background:${col(o.c)}">${o.c}</span><div class="panel">${dots}</div>`:`<span class="score" style="background:#94a3b8" title="No target role or comp set for this profile yet. Fit is hidden until a target is set.">–</span>`)}</td>
@@ -2096,9 +2000,11 @@ function renderCmp(){const sel=$('cmp-role');if(!sel)return;
   const list=cmpRoles();
   if(!list.length){sel.innerHTML=window.IS_OWNER!==false?'<option>No live roles yet (run the pipeline)</option>':'<option>Add a role to see your CV beside the job description</option>';
     ['cmp-jdmeta','cmp-jdnotes','cmp-to','cmp-fit','cmp-fitflag'].forEach(i=>$(i).textContent='');$('cmp-jd').value='';$('cmp-subj').value='';$('cmp-body').value='';return;}
-  const prev=sel.value;
   sel.innerHTML=list.map(r=>{const ap=isApplied(roleId(r));return `<option value="${ROLES.indexOf(r)}">${ap?'✅ ':''}${cleanRole(r.role)}, ${inferCo(r.company)||r.company} (${composite(r.lenses)})${ap?' · applied':''}</option>`;}).join('');
-  if([...sel.options].some(o=>o.value===prev))sel.value=prev;
+  // Default to the highest-fit role every time the page opens (list is sorted highest-first) so the fit
+  // panel always lands on the best match. openCmp() overrides this for a specific role; a manual dropdown
+  // change holds until you leave the page.
+  sel.selectedIndex=0;
   cmpLoad();cmpZoomInit();}
 const Z_DEF={cv:0.8,jd:1,em:0.8},Z_TGT={cv:'cmp-cv',jd:'cmp-jdzoom',em:'cmp-emzoom'};
 function applyZoom(w,v){const el=$(Z_TGT[w]);
@@ -2133,7 +2039,10 @@ function cmpLoad(){const sel=$('cmp-role');const r=ROLES[+sel.value];if(!r)retur
   const hasEmail=!!_email;
   const _named=!!cName(r);
   const _genericOnly=hasEmail&&!_named&&genericInbox(_email);   // an inbox, but no person to address
-  const _personal=hasEmail&&!_genericOnly;                       // a real, decided recipient
+  // Prepare the real draft whenever there is a named person to address OR a non-generic email, even with
+  // no verified address (the recipient line then shows "find on LinkedIn"). We no longer emit a guessed,
+  // unverifiable email, so without this a named-but-unverified recruiter would wrongly drop to a placeholder.
+  const _personal=(_named||hasEmail)&&!_genericOnly;             // a real, decided recipient
   /* a named recruiter found via enrichment (e.g. from JobStreet) but with no verified email is
      "named_contact_found": surface the name + next step, never the false "No named contact". */
   const _rcN=roleContact(r).name||r.contactName||'';
@@ -3016,7 +2925,7 @@ function saveCall(){const id=_callId;if(!id)return;const outcome=$('call-outcome
   if(statusOf(id)!=='applied'&&statusOf(id)!=='met')setStatus(id,'applied');
   closeOv('ov-call');renderOutreach();toast('Call logged: '+outcome+'.');}
 
-function show(v){['start','roles','recs','cmp','track','edgefit','cockpit','users','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});if(v!=='start'&&window.sgStop)window.sgStop();if(v==='start'){if(window.sgMarkSeen)window.sgMarkSeen();var _ng=document.getElementById('sg-nudge');if(_ng)_ng.remove();}document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='users'&&window.renderUsers)renderUsers();if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
+function show(v){['roles','recs','cmp','track','edgefit','cockpit','users','outreach'].forEach(x=>{const el=$('view-'+x),tb=$('tab-'+x);if(el)el.style.display=v===x?'':'none';if(tb)tb.className='tab'+(v===x?' on':'');});document.body.classList.toggle('cmp-mode',v==='cmp');if(v==='cmp')renderCmp();if(v==='edgefit')renderEdge();if(v==='track')renderTracker();if(v==='outreach')renderOutreach();if(v==='recs')renderRecs();if(v==='users'&&window.renderUsers)renderUsers();if(v==='cockpit'){const f=$('cockpit-frame');if(f)f.src='qa-cockpit.html?t='+Date.now();}const _on=$('tab-'+v);const _hc=$('hcurrent');if(_hc&&_on)_hc.textContent=_on.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();closeNav();}
 /* phone hamburger: open/close the collapsed nav + utilities dropdown (no-op visuals on desktop) */
 function toggleNav(){const open=document.body.classList.toggle('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded',open?'true':'false');}
 function closeNav(){document.body.classList.remove('nav-open');const t=$('navtoggle');if(t)t.setAttribute('aria-expanded','false');}
@@ -3173,7 +3082,7 @@ async function jsosPullState(rerender){
   }catch(e){/* no sync server: stay local-only, exactly as before */}
 }
 
-renderRoles();renderRecs();renderLearn();renderEdge();show('outreach');if(window.sgNudge)setTimeout(window.sgNudge,700);
+renderRoles();renderRecs();renderLearn();renderEdge();show('outreach');
 /* developer-only tabs: the QA Cockpit is an operator tool. On an end-user profile page
    (not owner and no ?dev=1) it is hidden, so the end user sees only their product panels. The owner /
    default view keeps it, so there's dashboard is unchanged. */
@@ -3185,6 +3094,9 @@ if(!window.IS_OWNER){
   ['tab-cockpit','tab-users'].forEach(function(id){var t=document.getElementById(id);if(t)t.style.display='none';});
   /* header operator buttons: the full Copy-JSON export (allJson) and Diagnostics are owner-only. */
   document.querySelectorAll('[onclick="allJson()"],[onclick="openDiag()"]').forEach(function(b){b.style.display='none';});
+  /* the Share-safe (mask-PII) toggle is an owner sharing tool — hide it on any other profile and make sure
+     that profile is never left stuck in masked mode (they have no button to turn it back off). */
+  var _mp=document.getElementById('mask-pii');if(_mp)_mp.style.display='none';window.DEMO=false;
   /* stop the operator iframe (QA cockpit) loading the owner's data on an end-user profile. */
   ['cockpit-frame'].forEach(function(id){var f=document.getElementById(id);if(f)f.src='about:blank';});
   /* if the hidden cockpit was the open tab (e.g. carried over), fall back to the default panel. */
@@ -3255,38 +3167,115 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
   #jsos-dock{position:fixed;right:16px;bottom:16px;z-index:9000;display:flex;gap:10px;align-items:center}
   #jsos-dock .jsos-fab{width:46px;height:46px;border-radius:50%;border:1px solid #d7e0ea;background:#0f2742;color:#fff;font-size:19px;cursor:pointer;box-shadow:0 4px 14px rgba(15,39,66,.28);display:flex;align-items:center;justify-content:center;position:relative;padding:0}
   #jsos-dock .jsos-fab.alt{background:#fff;color:#0f2742}
+  #jsos-dock .jsos-fab.vid{color:#3a5878;border-color:#dce7f5}
   #jsos-dock .jsos-fab:hover{filter:brightness(1.06)}
   #jsos-bell-badge{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e23b3b;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
-  #jsos-changes{position:fixed;right:16px;bottom:74px;z-index:9001;width:300px;max-width:calc(100vw - 32px);background:#fff;border:1px solid #d7e0ea;border-radius:12px;box-shadow:0 10px 30px rgba(15,39,66,.22);display:none;overflow:hidden}
-  #jsos-changes.open{display:block}
-  #jsos-changes .jsos-pop-h{background:#0f2742;color:#fff;padding:10px 13px;font-weight:700;font-size:14px}
-  #jsos-changes .jsos-pop-body{max-height:320px;overflow:auto;padding:8px}
-  .jsos-ch{padding:8px 9px;border:1px solid #eef2f6;border-radius:9px;margin-bottom:7px;background:#fafcff}
-  .jsos-ch-h{font-weight:700;font-size:13px;color:#11433a}
-  .jsos-ch-d{font-size:12.5px;color:#4a5763;line-height:1.5;margin-top:3px}
-  .jsos-ch-m{font-size:11px;color:#8a96a3;margin-top:5px}
+  #jsos-changes{position:fixed;right:16px;bottom:74px;z-index:9001;width:370px;max-width:calc(100vw - 32px);background:#fff;border:1px solid #dbe3ec;border-radius:14px;box-shadow:0 18px 48px rgba(15,39,66,.28);display:none;overflow:hidden}
+  #jsos-changes.open{display:block;animation:jsos-pop .18s ease}
+  @keyframes jsos-pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  #jsos-changes .jsos-pop-h{background:linear-gradient(135deg,#16294a,#1f3a5f 55%,#2c5282);color:#fff;padding:13px 15px}
+  #jsos-changes .jsos-pop-h b{font-size:15px;font-weight:800;display:block}
+  #jsos-changes .jsos-pop-h span{font-size:11.5px;opacity:.82}
+  #jsos-changes .jsos-pop-body{max-height:60vh;overflow:auto;padding:10px}
+  .jsos-ch{position:relative;padding:11px 12px;border:1px solid #e8edf3;border-radius:11px;margin-bottom:9px;background:#fff;transition:box-shadow .15s,border-color .15s}
+  .jsos-ch:hover{border-color:#cfdbea;box-shadow:0 4px 14px rgba(31,58,95,.08)}
+  .jsos-ch.new{border-left:3px solid #2c5282;background:#fafcff}
+  .jsos-ch-h{font-weight:700;font-size:13.5px;color:#1f3a5f;line-height:1.32;padding-right:42px}
+  .jsos-ch-new{position:absolute;top:11px;right:12px;font-size:9.5px;font-weight:800;letter-spacing:.4px;color:#fff;background:#2c5282;border-radius:20px;padding:2px 7px}
+  .jsos-ch-d{font-size:12.5px;color:#51606e;line-height:1.5;margin-top:4px}
+  .jsos-ch-f{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .jsos-pill{font-size:10.5px;color:#5a6b80;background:#eef3fb;border:1px solid #dce7f5;border-radius:20px;padding:2px 8px}
+  .jsos-watch{margin-top:9px;display:flex;align-items:center;gap:10px;background:#0e1d33;border-radius:9px;overflow:hidden;cursor:pointer;border:1px solid #d7e0ea}
+  .jsos-watch img{width:96px;height:54px;object-fit:cover;flex:none;display:block}
+  .jsos-watch .wt{font-size:12px;font-weight:700;color:#fff;padding:0 4px}
+  .jsos-watch .wt small{display:block;font-weight:500;opacity:.82;font-size:10.5px;margin-top:2px}
+  .jsos-watch:hover{filter:brightness(1.1)}
+  /* video lightbox: the navigation plane across all videos */
+  #jsos-vmodal{position:fixed;inset:0;z-index:9100;background:rgba(8,16,30,.74);display:none;align-items:center;justify-content:center;padding:20px}
+  #jsos-vmodal.open{display:flex}
+  .jvm-box{width:min(940px,96vw);background:#0e1d33;border:1px solid #2a3f5f;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+  .jvm-top{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;color:#fff;background:linear-gradient(135deg,#16294a,#1f3a5f)}
+  .jvm-top b{font-size:15px}
+  .jvm-x{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;width:30px;height:30px;border-radius:8px;font-size:15px;cursor:pointer}
+  .jvm-main{display:grid;grid-template-columns:1fr 232px;min-height:0}
+  .jvm-player{background:#000;display:flex;flex-direction:column;min-width:0}
+  .jvm-player video{width:100%;max-height:62vh;background:#000;display:block}
+  .jvm-cap{color:#cfe0f7;font-size:13px;padding:11px 14px;background:#0e1d33;line-height:1.45}
+  .jvm-cap b{color:#fff;font-size:14.5px;display:block;margin-bottom:3px}
+  .jvm-nav{background:#10223c;border-left:1px solid #233a5b;overflow:auto;max-height:62vh}
+  .jvm-nav .nh{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#7f9ec9;padding:12px 13px 6px}
+  .jvm-item{display:flex;gap:9px;padding:8px 11px;cursor:pointer;border-left:3px solid transparent}
+  .jvm-item:hover{background:rgba(255,255,255,.05)}
+  .jvm-item.on{background:rgba(44,82,130,.3);border-left-color:#5b8fd6}
+  .jvm-item img{width:74px;height:42px;object-fit:cover;border-radius:5px;flex:none;background:#000}
+  .jvm-item .it{font-size:12.5px;color:#eaf2ff;font-weight:600;line-height:1.25}
+  .jvm-item .id{font-size:10.5px;color:#9bb4d6;margin-top:3px}
+  @media(max-width:640px){.jvm-main{grid-template-columns:1fr}.jvm-nav{max-height:150px;border-left:none;border-top:1px solid #233a5b}.jvm-player video{max-height:44vh}}
   .fb-page{width:100%;padding:8px;border:1px solid #d7e0ea;border-radius:8px;font-size:14px;margin-bottom:4px}
 </style>
 <div id="jsos-dock">
+  <button class="jsos-fab alt vid" id="jsos-video" title="Watch the 30-second tour" onclick="openVideo('guide-tour')">&#127916;</button>
   <button class="jsos-fab alt" id="jsos-bell" title="What's new" onclick="openChanges()">&#128276;<span id="jsos-bell-badge" style="display:none">0</span></button>
   <button class="jsos-fab" id="jsos-fb" title="Send feedback on this page" onclick="openFeedback()">&#128172;</button>
 </div>
-<div id="jsos-changes"><div class="jsos-pop-h">What's new</div><div class="jsos-pop-body"></div></div>
+<div id="jsos-changes"><div class="jsos-pop-h"><b>What's new</b><span>Improvements that shipped to everyone</span></div><div class="jsos-pop-body"></div></div>
+<div id="jsos-vmodal"><div class="jvm-box">
+  <div class="jvm-top"><b id="jvm-title">Videos</b><button class="jvm-x" onclick="closeVideo()" aria-label="Close">&#10005;</button></div>
+  <div class="jvm-main">
+    <div class="jvm-player"><video id="jvm-video" controls playsinline></video><div class="jvm-cap" id="jvm-cap"></div></div>
+    <div class="jvm-nav" id="jvm-nav"></div>
+  </div>
+</div></div>
+<script src="videos.js" onerror="console.log('No videos.js, video library empty.')"></script>
 <script src="changelog.js" onerror="console.log('No changelog.js, change log empty.')"></script>
 <script>
-/* notification bell: reads window.CHANGELOG (global app changes) and badges what you have not seen yet. No AI. */
+/* notification bell + video lightbox. Reads window.CHANGELOG + window.JSOS_VIDEOS (static, no AI). */
 (function(){
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function seenList(){try{return JSON.parse(localStorage.getItem('jsos_changes_seen')||'[]');}catch(e){return [];}}
-  function changes(){return (window.CHANGELOG||[]);}
+  /* collapse duplicates: one entry per id, keep the NEWEST date, newest-first. Guards against the bell
+     ever showing the same change two or three times even if the source list has stale repeats. */
+  function changes(){var raw=(window.CHANGELOG||[]),by={};raw.forEach(function(c){var k=c.id||c.title;if(!by[k]||String(c.date||'')>String(by[k].date||''))by[k]=c;});return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});}
   function unseen(){var s=seenList();return changes().filter(function(c){return s.indexOf(c.id)===-1;});}
+  function videos(){return (window.JSOS_VIDEOS||[]);}
+  function vidOf(slug){return videos().filter(function(v){return v.slug===slug;})[0]||null;}
   window.renderBell=function(){var b=document.getElementById('jsos-bell-badge');if(!b)return;var n=unseen().length;b.textContent=n>9?'9+':String(n);b.style.display=n?'':'none';};
-  window.openChanges=function(){var pop=document.getElementById('jsos-changes');if(!pop)return;var list=changes();
-    pop.querySelector('.jsos-pop-body').innerHTML=list.length?list.map(function(c){return '<div class="jsos-ch"><div class="jsos-ch-h">'+esc(c.title)+'</div>'+(c.detail?'<div class="jsos-ch-d">'+esc(c.detail)+'</div>':'')+'<div class="jsos-ch-m">'+esc(c.date||'')+(c.scope==='all'?' · for everyone':'')+'</div></div>';}).join(''):'<div class="jsos-ch-d" style="padding:8px">No changes yet. Your feedback shapes what shows up here.</div>';
+  window.openChanges=function(){var pop=document.getElementById('jsos-changes');if(!pop)return;var list=changes(),seen=seenList();
+    pop.querySelector('.jsos-pop-body').innerHTML=list.length?list.map(function(c){
+      var isNew=seen.indexOf(c.id)===-1, v=c.video?vidOf(c.video):null;
+      var watch=v?'<div class="jsos-watch" onclick="openVideo(\''+esc(v.slug)+'\')"><img src="'+esc(v.poster||'')+'" alt=""><div class="wt">&#9654; Watch<small>'+esc(v.title||'')+'</small></div></div>':'';
+      return '<div class="jsos-ch'+(isNew?' new':'')+'">'+(isNew?'<span class="jsos-ch-new">NEW</span>':'')+'<div class="jsos-ch-h">'+esc(c.title)+'</div>'+(c.detail?'<div class="jsos-ch-d">'+esc(c.detail)+'</div>':'')+watch+'<div class="jsos-ch-f"><span class="jsos-pill">'+esc(c.date||'')+'</span>'+(c.scope==='all'?'<span class="jsos-pill">for everyone</span>':'')+'</div></div>';
+    }).join(''):'<div class="jsos-ch-d" style="padding:10px">No changes yet. Your feedback shapes what shows up here.</div>';
     var willOpen=!pop.classList.contains('open');pop.classList.toggle('open',willOpen);
     if(willOpen){var ids=changes().map(function(c){return c.id;});if(typeof setStore==='function')setStore('jsos_changes_seen',ids);else localStorage.setItem('jsos_changes_seen',JSON.stringify(ids));window.renderBell();}};
   document.addEventListener('click',function(e){var pop=document.getElementById('jsos-changes'),dock=document.getElementById('jsos-dock');if(pop&&pop.classList.contains('open')&&dock&&!dock.contains(e.target)&&!pop.contains(e.target))pop.classList.remove('open');});
-  if(document.readyState!=='loading')window.renderBell();else document.addEventListener('DOMContentLoaded',window.renderBell);
+
+  /* ---- video lightbox: the navigation plane across all videos (guide tour + feature videos) ---- */
+  window.selectVideo=function(slug){var v=vidOf(slug);if(!v)return;var vd=document.getElementById('jvm-video');if(!vd)return;
+    vd.src=v.src;if(v.poster)vd.poster=v.poster;vd.load();var p=vd.play();if(p&&p.catch)p.catch(function(){});
+    var cap=document.getElementById('jvm-cap');if(cap)cap.innerHTML='<b>'+esc(v.title||'')+'</b>'+esc(v.desc||'');
+    var t=document.getElementById('jvm-title');if(t)t.textContent=v.title||'Videos';
+    Array.prototype.forEach.call(document.querySelectorAll('#jvm-nav .jvm-item'),function(el){el.classList.toggle('on',el.getAttribute('data-slug')===slug);});};
+  window.openVideo=function(slug){var list=videos();if(!list.length)return;var m=document.getElementById('jsos-vmodal');if(!m)return;
+    var pop=document.getElementById('jsos-changes');if(pop)pop.classList.remove('open');
+    document.getElementById('jvm-nav').innerHTML='<div class="nh">All videos</div>'+list.map(function(v){return '<div class="jvm-item" data-slug="'+esc(v.slug)+'" onclick="selectVideo(\''+esc(v.slug)+'\')"><img src="'+esc(v.poster||'')+'" alt=""><div><div class="it">'+esc(v.title||'')+'</div><div class="id">'+esc(v.date||'')+(v.tag?' &middot; '+esc(v.tag):'')+'</div></div></div>';}).join('');
+    m.classList.add('open');window.selectVideo(slug||list[0].slug);};
+  window.closeVideo=function(){var m=document.getElementById('jsos-vmodal');if(!m)return;var vd=document.getElementById('jvm-video');try{vd.pause();vd.removeAttribute('src');vd.load();}catch(e){}m.classList.remove('open');};
+  document.addEventListener('click',function(e){var m=document.getElementById('jsos-vmodal');if(m&&m.classList.contains('open')&&e.target===m)window.closeVideo();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')window.closeVideo();});
+
+  /* new user gets the tour ONCE as a gentle prompt (the lightbox). After that it lives only behind the
+     subtle film icon by the bell. Suppressed under automation so checks/screenshots stay clean. */
+  window.firstRunVideo=function(){try{
+    if(navigator.webdriver)return;
+    if(localStorage.getItem('jsos_guide_seen')==='1')return;
+    if(!videos().length)return;
+    try{localStorage.setItem('jsos_guide_seen','1');}catch(e){}
+    window.openVideo('guide-tour');
+  }catch(e){}};
+
+  function init(){window.renderBell();setTimeout(window.firstRunVideo,900);}
+  if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();
 </script>
 <style>

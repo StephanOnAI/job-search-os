@@ -1,22 +1,10 @@
-/* AUTO-MAINTAINED app changelog shown in the notification bell. Source: changelog.json. Newest first. */
+/* AUTO-MAINTAINED app changelog shown in the notification bell. Source: changelog.json. Newest first.
+ * Optional per-entry "video": a slug in window.JSOS_VIDEOS (videos.js) shown as a "Watch" thumbnail for
+ * big structural changes / major improvements. */
 window.CHANGELOG = [
   {
     "id": "dedup-open-queue",
     "date": "2026-06-16",
-    "title": "Collapse duplicate open backlog picks for the same target to the newest",
-    "detail": "Shipped and live for everyone.",
-    "scope": "all"
-  },
-  {
-    "id": "dedup-open-queue",
-    "date": "2026-06-16",
-    "title": "Collapse duplicate open backlog picks for the same target to the newest",
-    "detail": "Shipped and live for everyone.",
-    "scope": "all"
-  },
-  {
-    "id": "dedup-open-queue",
-    "date": "2026-06-15",
     "title": "Collapse duplicate open backlog picks for the same target to the newest",
     "detail": "Shipped and live for everyone.",
     "scope": "all"
