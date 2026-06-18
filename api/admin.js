@@ -11,6 +11,13 @@ const SB = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const OWNER = (process.env.OWNER_EMAIL || "").toLowerCase();
 
+/* a readable temp password the owner can pass on by message (no ambiguous chars). The user changes it after. */
+function tempPassword() {
+  const cs = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let s = ""; for (let i = 0; i < 4; i++) s += cs[Math.floor(Math.random() * cs.length)];
+  return s + "-" + Math.floor(1000 + Math.random() * 9000);   // e.g. Kp7m-4821
+}
+
 async function caller(token) {
   if (!token || !SB) return null;
   try {
@@ -43,6 +50,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ users });
     }
     const email = ((req.body && req.body.email) || "").trim().toLowerCase();
+    if (action === "create") {
+      // create a confirmed account WITH a temporary password and hand it back to the owner to pass on, so NO
+      // email needs to be delivered (the owner tells the user their login out of band, they change it after).
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "valid email required" });
+      const pw = tempPassword();
+      const r = await fetch(`${SB}/auth/v1/admin/users`, { method: "POST", headers: h, body: JSON.stringify({ email, password: pw, email_confirm: true }) });
+      if (r.status === 422) return res.status(409).json({ error: "that email already has an account (use Reset password instead)" });
+      if (!r.ok) return res.status(502).json({ error: "could not create the login (" + r.status + ")" });
+      return res.status(200).json({ ok: true, action: "created", email, password: pw });
+    }
+    if (action === "reset") {
+      // owner-driven password reset: set a fresh temporary password on an existing user, return it to the owner.
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "valid email required" });
+      const find = await fetch(`${SB}/auth/v1/admin/users?per_page=200`, { headers: h });
+      const fd = await find.json(); const u = (fd.users || fd || []).find(x => (x.email || "").toLowerCase() === email);
+      if (!u) return res.status(404).json({ error: "no account for that email" });
+      const pw = tempPassword();
+      const r = await fetch(`${SB}/auth/v1/admin/users/${u.id}`, { method: "PUT", headers: h, body: JSON.stringify({ password: pw }) });
+      if (!r.ok) return res.status(502).json({ error: "could not reset the password (" + r.status + ")" });
+      return res.status(200).json({ ok: true, action: "reset", email, password: pw });
+    }
     if (action === "invite" || action === "resend") {
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "valid email required" });
       // sends the user a sign-in (magic) link; works for a brand-new invite or a re-send

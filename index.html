@@ -639,7 +639,7 @@
           <div class="cmp-foot">
             <div id="cmp-decision" style="font-size:10.5px;line-height:1.4;margin-bottom:6px"></div>
             <div class="atttray" id="att-tray"></div>
-            <button class="btn primary" onclick="cmpGmail()">✉ Open in Gmail</button>
+            <button class="btn primary" id="cmp-primary" onclick="cmpGmail()">✉ Open in Gmail</button>
             <button class="btn" onclick="cmpCopy()">Copy</button>
             <button class="btn" id="cmp-marksent" onclick="cmpMarkSent()" title="Mark this application as sent — adds it to your Tracker for follow-up">✓ Mark sent</button>
             <button class="btn" onclick="cmpReset()" title="Discard edits and reload the generated draft">Reset</button>
@@ -706,8 +706,9 @@
   <!-- Users (owner only): invite people, see who is active or stuck, resend a sign-in link, remove. Metadata
        only (email + activity) — never a user's private roles or CV. Magic-link login, no passwords. -->
   <div id="view-users" style="display:none">
-    <div class="pagehead"><span class="ph-ico">👥</span><div class="ph-t"><h2>Users</h2><p>Everyone you have invited. You see only their email and activity, never their private roles or CV. They sign in with an email link, no password.</p></div></div>
-    <div class="us-bar"><input id="us-invite" type="email" placeholder="invite a user by email" autocomplete="off"><button class="btn primary" onclick="usInvite()">Invite</button><span id="us-msg" class="us-msg"></span></div>
+    <div class="pagehead"><span class="ph-ico">👥</span><div class="ph-t"><h2>Users</h2><p>Everyone you have added. You see only their email and activity, never their private roles or CV. Create a login with a password (no email needed, you give them the password to change), or send a no-password email link.</p></div></div>
+    <div class="us-bar"><input id="us-invite" type="email" placeholder="add a user by email" autocomplete="off"><button class="btn primary" onclick="usCreate()">Create login + password</button><button class="btn" onclick="usInvite()">Email a link instead</button><span id="us-msg" class="us-msg"></span></div>
+    <div id="us-cred" class="us-cred" style="display:none"></div>
     <div id="us-summary" class="us-summary"></div>
     <div id="us-body"><div class="us-empty">Loading…</div></div>
   </div>
@@ -2062,6 +2063,15 @@ function cmpLoad(){const sel=$('cmp-role');const r=ROLES[+sel.value];if(!r)retur
   }
   $('cmp-subj').value=_personal?e.subj:'';
   $('cmp-body').value=_personal?e.body:(_genericOnly?('No named person is listed, only the generic inbox '+_email+', so a tailored personal email is not the move. Use “Open full posting ↗” above to apply through the portal, or '+_seniorHint+'.'):(_rcN?('Named recruiter found'+(_altSrc?(' on '+_altSrc):'')+': '+_rcN+(r.eaReg?' ('+r.eaReg+')':'')+'. No verified email yet, so do not send a guessed address. Next step: find '+_rcN.split(/\s+/)[0]+' on LinkedIn, or apply through the official posting via “Open full posting ↗” above.'):'This posting lists no named contact, so a tailored email is not the move here. Use “Open full posting ↗” above to apply through the portal, or look up the hiring consultant on LinkedIn and reach out there.'));
+  /* Make the move obvious for the applier: with a real recipient the primary action drafts the email;
+     with no named contact (portal-only) it becomes a one-click "Apply on portal" instead of a dead-end
+     Gmail button over an empty draft. cmpGmail() already opens r.url when there is no recipient. */
+  const _pb=$('cmp-primary');
+  if(_pb){
+    if(!_personal&&r.url){_pb.textContent='Apply on portal ↗';_pb.title='No named contact in this ad. Apply directly on the official posting.';}
+    else if(!_personal){_pb.textContent='Find contact on LinkedIn';_pb.title='No named contact and no posting link. Search LinkedIn for the hiring manager.';}
+    else{_pb.textContent='✉ Open in Gmail';_pb.title='Open a tailored email to the named contact.';}
+  }
   const dl=$('cmp-cvdl');if(dl)dl.setAttribute('download',cvFileName(r));
   const _dec=roleDecision(r,$('cmp-jd').value||''),_dm=REC_STYLE[_dec.recommendation]||['•','#555','#eee'];const _de=$('cmp-decision');if(_de)_de.innerHTML=`<span style="background:${_dm[2]};color:${_dm[1]};border:1px solid ${_dm[1]}40;font-weight:700;border-radius:6px;padding:2px 8px;margin-right:6px">${_dm[0]} ${recUiLabel(_dec.recommendation)}</span>${noem(_dec.nextAction)}${recDupNotice(r)}`;
   cmpJdSrc();cmpDayFit();cmpCoverage();cmpCvCov();renderAtt(r);cmpDoc(cmpWhich);cmpGrowEmail();cmpGrowJd();}
@@ -3444,6 +3454,13 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
 .us-summary{font-size:13px;color:var(--muted);margin:0 0 10px}
 .us-summary b{color:var(--navy)}
 .us-empty{padding:22px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;line-height:1.55;background:#fafcff;text-align:center;max-width:70ch;margin:0 auto}
+.us-cred{margin:0 0 14px;padding:14px 16px;border:1px solid #cfe0d6;border-radius:10px;background:#f3fbf6;max-width:46ch}
+.us-cred-t{font-weight:700;color:var(--navy);font-size:13px;margin:0 0 8px}
+.us-cred-row{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:13px;padding:3px 0}
+.us-cred-row span{color:var(--muted)}
+.us-cred-row code{background:#fff;border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:13px;color:var(--ink)}
+.us-cred-acts{margin-top:10px}
+.us-cred-note{margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.5}
 .us-tbl{width:100%;border-collapse:collapse;font-size:13px}
 .us-tbl th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:700;padding:6px 10px;border-bottom:1px solid var(--line)}
 .us-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);vertical-align:middle}
@@ -3479,7 +3496,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
           var started=!!u.lastActive, la=started?new Date(u.lastActive).toISOString().slice(0,10):"—";
           var status=started?'<span class="us-tag ok">active</span>':'<span class="us-tag warn">invited, not signed in</span>';
           return "<tr"+(started?"":' class="us-nudge"')+"><td>"+uEsc(u.email)+"</td><td>"+status+"</td><td>"+la+'</td><td class="us-acts">'+
-            '<button class="btn" onclick="usResend(\''+uEsc(u.email)+'\')">Resend link</button> '+
+            '<button class="btn" onclick="usReset(\''+uEsc(u.email)+'\')">Reset password</button> '+
+            '<button class="btn" onclick="usResend(\''+uEsc(u.email)+'\')">Email link</button> '+
             '<button class="btn danger" onclick="usRemove(\''+uEsc(u.id)+'\',\''+uEsc(u.email)+'\')">Remove</button></td></tr>';
         }).join("");
         body.innerHTML='<table class="us-tbl"><thead><tr><th>Email</th><th>Status</th><th>Last active</th><th>Actions</th></tr></thead><tbody>'+rows+"</tbody></table>";
@@ -3492,6 +3510,37 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
     umsg("Inviting…");
     uPost({action:"invite",email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
       .then(function(x){ umsg(x.ok?("Invited "+email+". They get a sign-in link."):(x.d.error||"Invite failed.")); if(x.ok){ el.value=""; renderUsers(); } })
+      .catch(function(){ umsg("Could not reach the admin service."); });
+  };
+  function usShowCred(title,email,pw){
+    var box=document.getElementById("us-cred"); if(!box)return;
+    box.style.display="block";
+    box.innerHTML='<div class="us-cred-t">'+uEsc(title)+'</div>'+
+      '<div class="us-cred-row"><span>Email</span><code>'+uEsc(email)+'</code></div>'+
+      '<div class="us-cred-row"><span>Temporary password</span><code id="us-cred-pw">'+uEsc(pw)+'</code></div>'+
+      '<div class="us-cred-acts"><button class="btn" onclick="usCopyCred(\''+uEsc(email)+'\',\''+uEsc(pw)+'\')">Copy login</button> '+
+      '<button class="btn" onclick="document.getElementById(\'us-cred\').style.display=\'none\'">Hide</button></div>'+
+      '<div class="us-cred-note">Send this to them yourself (no email is sent). They sign in, then use Change password to set their own.</div>';
+  }
+  window.usCopyCred=function(email,pw){
+    var t="Job Search OS sign-in\nEmail: "+email+"\nTemporary password: "+pw+"\nSign in, then use Change password to set your own.";
+    try{ navigator.clipboard.writeText(t); umsg("Login copied. Paste it to them."); }catch(e){ umsg("Copy not available, read it off the box."); }
+  };
+  window.usCreate=function(){
+    var el=document.getElementById("us-invite"), email=(el&&el.value||"").trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ umsg("Enter a valid email."); return; }
+    if(!window.JSOS_HOSTED){ umsg("Creating a login works on the deployed app."); return; }
+    umsg("Creating login…");
+    uPost({action:"create",email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){ if(x.ok){ umsg("Login created for "+email+"."); usShowCred("Login created",x.d.email,x.d.password); el.value=""; renderUsers(); } else { umsg(x.d.error||"Could not create the login."); } })
+      .catch(function(){ umsg("Could not reach the admin service."); });
+  };
+  window.usReset=function(email){
+    if(!window.JSOS_HOSTED){ umsg("Works on the deployed app."); return; }
+    if(!confirm("Set a new temporary password for "+email+"? Their current password stops working."))return;
+    umsg("Resetting…");
+    uPost({action:"reset",email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+      .then(function(x){ if(x.ok){ umsg("New password set for "+email+"."); usShowCred("Password reset",x.d.email,x.d.password); } else { umsg(x.d.error||"Reset failed."); } })
       .catch(function(){ umsg("Could not reach the admin service."); });
   };
   window.usResend=function(email){ if(!window.JSOS_HOSTED){ umsg("Works on the deployed app."); return; } umsg("Sending link…");
