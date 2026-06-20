@@ -101,7 +101,7 @@
       gate(
         '<div style="font-size:20px;font-weight:800;margin-bottom:10px">Before we start</div>' +
         '<div style="opacity:.86;text-align:left;font-size:13.5px;line-height:1.6;margin-bottom:16px">' +
-          'Job Search OS saves the roles and notes you add so your list is here next time. Your data is private to your login, Singapore-hosted, and is never shared or sold. You can export or delete it any time.' +
+          'Job Search OS saves the roles and notes you add so your list is here next time, private to your login. By continuing you agree to store your data for your own job search.' +
         '</div>' +
         '<label style="display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:13px;margin-bottom:14px;cursor:pointer">' +
           '<input id="jsos-consent-cb" type="checkbox" style="margin-top:3px"/> <span>I agree to store my data for my own job search.</span></label>' +
@@ -144,16 +144,12 @@
     bar.innerHTML = '<span style="color:#5a6b80;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(USER.email || "Signed in") + "</span>" +
       (window.IS_OWNER ? '<button id="jsos-users" style="' + btn + ';font-weight:700">Users</button>' : "") +
       '<button id="jsos-password" style="' + btn + '">Change password</button>' +
-      '<button id="jsos-privacy" style="' + btn + '">Privacy</button>' +
       '<button id="jsos-export" style="' + btn + '">Export my data</button>' +
-      '<button id="jsos-signout" style="' + btn + '">Sign out</button>' +
-      '<button id="jsos-delete" style="border:1px solid #f0c4c4;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;color:#9b2c2c">Delete my data</button>';
+      '<button id="jsos-signout" style="' + btn + '">Sign out</button>';
     if (window.IS_OWNER) { var ub = document.getElementById("jsos-users"); if (ub) ub.onclick = window.jsosUsers; }
     document.getElementById("jsos-password").onclick = function () { window.jsosChangePassword(false); };
-    document.getElementById("jsos-privacy").onclick = window.jsosPrivacy;
     document.getElementById("jsos-export").onclick = window.jsosExport;
     document.getElementById("jsos-signout").onclick = window.jsosSignOut;
-    document.getElementById("jsos-delete").onclick = window.jsosDeleteConfirm;
   }
 
   /* OWNER Users page: a table of users (email + last active), invite by email, resend their sign-in link, or

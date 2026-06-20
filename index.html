@@ -3312,8 +3312,13 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
 #ov-mycv textarea{width:100%;box-sizing:border-box;font:inherit;font-size:12.5px;line-height:1.5;padding:10px 11px;border:1px solid #e2e8f0;border-radius:8px;color:#1a202c;background:#fff;resize:vertical}
 #ov-mycv textarea:focus{outline:none;border-color:#2c5282;box-shadow:0 0 0 2px rgba(44,82,130,.15)}
 #ov-mycv .mycv-row{display:flex;justify-content:space-between;gap:10px;margin:6px 0 2px}
-/* CV-as-text pane in the side-by-side (a user's pasted CV, instead of the owner CV file) */
-.cmp-cvtext{white-space:pre-wrap;overflow:auto;padding:16px 18px;font-size:12px;line-height:1.55;color:#1a202c;background:#fff;font-family:ui-sans-serif,system-ui,'Segoe UI',Arial}
+/* CV-as-text pane in the side-by-side (a user's pasted CV, lightly formatted, not raw text) */
+.cmp-cvtext{overflow:auto;padding:18px 20px;font-size:12px;line-height:1.5;color:#1a202c;background:#fff;font-family:ui-sans-serif,system-ui,'Segoe UI',Arial}
+.cmp-cvtext .cvh{font-weight:700;color:#1f3a5f;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;margin:13px 0 4px;border-bottom:1px solid #e2e8f0;padding-bottom:2px}
+.cmp-cvtext .cvh.cvname{margin-top:0;font-size:17px;text-transform:none;letter-spacing:0;border:none}
+.cmp-cvtext p{margin:3px 0}
+.cmp-cvtext ul{margin:3px 0 9px;padding-left:18px}
+.cmp-cvtext li{margin:2px 0}
 @media(max-width:560px){#ov-addrole .ar-grid{grid-template-columns:1fr}.pagehead .ar-actions{margin-left:0;flex-wrap:wrap}}
 </style>
 <script>
@@ -3430,18 +3435,65 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
     if(typeof closeOv==='function')closeOv('ov-mycv');
     if(typeof toast==='function')toast(txt?'Saved. Your fit and coverage now read from your CV.':'CV cleared.');
   };
-  /* side-by-side CV pane: show the user's pasted CV text instead of the owner CV file when they have one */
-  var _cct=window.cmpCvText;
+  /* Lightly format a pasted CV (plain text or light markdown) into structured HTML so the side-by-side
+     pane reads like a CV, not a raw dump. Escapes first (no HTML injection), joins the common copy-paste
+     artifact of a lone bullet glyph on its own line with the text that follows, and styles headings,
+     ALL-CAPS section titles, bullets and **bold**. */
+  function cvTextToHtml(txt){
+    var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    var bold=function(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');};
+    var raw=String(txt||'').replace(/\r\n?/g,'\n').split('\n'), lines=[];
+    for(var i=0;i<raw.length;i++){
+      var cur=raw[i].replace(/\s+$/,'');
+      if(/^\s*[••▪\-*]\s*$/.test(cur)){                 // lone bullet glyph -> attach next text line
+        var j=i+1; while(j<raw.length && !raw[j].trim()) j++;
+        if(j<raw.length){ lines.push('• '+raw[j].trim()); i=j; continue; }
+      }
+      lines.push(cur);
+    }
+    var html='', inList=false, first=true;
+    var closeList=function(){ if(inList){ html+='</ul>'; inList=false; } };
+    for(var k=0;k<lines.length;k++){
+      var t=lines[k].trim();
+      if(!t){ closeList(); continue; }
+      if(/^#{1,3}\s+/.test(t)){ closeList(); html+='<div class="cvh'+(first?' cvname':'')+'">'+bold(t.replace(/^#+\s+/,''))+'</div>'; first=false; continue; }
+      if(/^[••▪\-*]\s+/.test(t)){ if(!inList){html+='<ul>';inList=true;} html+='<li>'+bold(t.replace(/^[••▪\-*]\s+/,''))+'</li>'; continue; }
+      closeList();
+      if(first && t.length<=46){ html+='<div class="cvh cvname">'+bold(t)+'</div>'; first=false; continue; }   // first line = name
+      if(t.length<=48 && /[A-Z]/.test(t) && t===t.toUpperCase() && !/[a-z]/.test(t)){ html+='<div class="cvh">'+bold(t)+'</div>'; first=false; continue; }
+      var m=t.match(/^([A-Z][A-Za-z &/]{2,28}):\s+(.*)$/);
+      html+= m ? '<p><strong>'+esc(m[1])+':</strong> '+bold(m[2])+'</p>' : '<p>'+bold(t)+'</p>';
+      first=false;
+    }
+    closeList();
+    return html||'<p style="color:#94a3b8">No CV text yet.</p>';
+  }
+  /* side-by-side CV pane. A profile's OWN built CV file always wins (it is formatted and authoritative);
+     the pasted "My CV" text is only shown when this profile has no built CV (a true end user who has only
+     pasted). Existence is checked once against this profile's CV file and cached, so a paste never silently
+     hides a real built CV. */
+  var _cct=window.cmpCvText, _builtOk=null;
   window.cmpCvText=function(){
     var uc=userCv(), fr=document.getElementById('cmp-cv'), tp=document.getElementById('cmp-cv-text');
     var dl=document.getElementById('cmp-cvdl'), pdf=document.getElementById('cmp-cvpdf');
-    if(uc){ try{ cvText=uc; }catch(e){} window.CV_TEXT=uc;
-      if(tp){tp.textContent=uc;tp.style.display='';} if(fr)fr.style.display='none';
-      if(dl)dl.style.display='none'; if(pdf)pdf.style.display='none';   // owner CV files are not this user's
-      return; }
-    if(tp)tp.style.display='none'; if(fr)fr.style.display='';
-    if(dl)dl.style.display=''; if(pdf)pdf.style.display='';
-    if(typeof _cct==='function') return _cct.apply(this,arguments);
+    var showPaste=function(){ try{ cvText=uc; }catch(e){} window.CV_TEXT=uc;
+      if(tp){tp.innerHTML=cvTextToHtml(uc);tp.style.display='';} if(fr)fr.style.display='none';
+      if(dl)dl.style.display='none'; if(pdf)pdf.style.display='none'; };
+    var showBuilt=function(){ if(tp)tp.style.display='none'; if(fr)fr.style.display='';
+      if(dl)dl.style.display=''; if(pdf)pdf.style.display='';
+      if(typeof _cct==='function') return _cct.apply(window.cmpCvText,[]); };
+    if(uc){
+      if(_builtOk===true) return showBuilt();
+      if(_builtOk===false||_builtOk==='pending') return showPaste();
+      _builtOk='pending'; showPaste();                                  // show formatted paste while we check
+      try{ fetch(pdoc('cv')+'.html',{cache:'no-store'})
+            .then(function(r){ _builtOk=!!(r&&r.ok); })
+            .catch(function(){ _builtOk=false; })
+            .then(function(){ if(_builtOk===true) window.cmpCvText(); }); }
+      catch(e){ _builtOk=false; }
+      return;
+    }
+    return showBuilt();
   };
 })();
 </script>
@@ -3549,6 +3601,35 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)jsosPullSt
   window.usRemove=function(id,email){ if(!confirm("Remove "+email+"? This deletes their account and all their data."))return; umsg("Removing…");
     uPost({action:"remove",id:id,email:email}).then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
       .then(function(x){ umsg(x.ok?"Removed.":(x.d.error||"Failed.")); if(x.ok)renderUsers(); }).catch(function(){ umsg("Could not reach the admin service."); }); };
+})();
+</script>
+<script>
+/* Freshness poll: when a served file changes on disk (a regenerated roles.js, an edited index.html),
+   reflect it in an already-open tab rather than showing stale content. It reloads on its own only when
+   that is SAFE — the tab is hidden, or it is visible with no modal open, nothing focused, and not on the
+   side-by-side (so a half-written email is never lost). Otherwise it shows the gentle toast once, so the
+   user reloads when ready. http only; relies on serve-sync's Last-Modified + no-store headers. */
+(function(){
+  if(location.protocol!=='http:'&&location.protocol!=='https:')return;
+  var urls=[location.pathname,(window.PROFILE_DIR||'')+'roles.js'], seen={}, told=false, ready=false;
+  function stamp(u){ return fetch(u,{method:'HEAD',cache:'no-store'})
+      .then(function(r){ return r.ok?(r.headers.get('last-modified')||r.headers.get('content-length')||''):null; })
+      .catch(function(){ return null; }); }
+  function snap(cb){ Promise.all(urls.map(stamp)).then(cb); }
+  snap(function(v){ urls.forEach(function(u,i){ seen[u]=v[i]; }); ready=true; });
+  function safe(){
+    if(document.hidden)return true;                                         // tab in the background: reload is invisible
+    if(document.querySelector('.ov.open'))return false;                     // a modal is open
+    var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return false; // user is typing
+    var sxs=document.getElementById('view-cmp'); if(sxs&&sxs.offsetParent!==null)return false;    // side-by-side: protect the email draft
+    return true;
+  }
+  setInterval(function(){ if(!ready)return; snap(function(v){
+    var changed=urls.some(function(u,i){ return v[i]!=null&&seen[u]!=null&&v[i]!==seen[u]; });
+    if(!changed)return;
+    if(safe()){ location.reload(); return; }
+    if(!told){ told=true; if(typeof toast==='function')toast('Updated. Reload to see the latest.'); }
+  }); },30000);
 })();
 </script>
 </body>
